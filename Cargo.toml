@@ -1,7 +1,7 @@
 [workspace]
 resolver = "2" # Important! wgpu/Bevy needs this!
 members = [
-    "renameme",
+    "sonars",
 ]
 
 [profile.dev.package."*"]

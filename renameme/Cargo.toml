@@ -1,0 +1,28 @@
+[package]
+name = "renameme"
+version = "0.1.0"
+edition = "2021"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
+bevy = "0.7.0"
+bevy_egui = "0.14.0"
+bevy_kira_audio = "0.10.0"
+
+[features]
+default = [
+    "bevy/bevy_winit",
+    "bevy/render",
+    "bevy/png",
+    "bevy/x11",
+    "bevy_kira_audio/ogg"
+]
+
+dev = [
+    "bevy/dynamic",
+]
+
+
+[target.'cfg(target_os = "linux")'.dependencies]
+winit = { version = "0.25", features=["x11"]}

@@ -27,8 +27,8 @@ impl Plugin for SoundPlugin{
         };
         sink.append(source);
         app.insert_non_send_resource(SoundSystemResources{
-            stream,
-            sink
+            _stream: stream,
+            _sink: sink
         });
         app.insert_resource(SoundControl{sender});
     }

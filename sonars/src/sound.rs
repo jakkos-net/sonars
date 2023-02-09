@@ -23,7 +23,7 @@ impl Plugin for SoundPlugin{
         let sink = Sink::try_new(&stream_handle).unwrap();
         let (sender,receiver) = sync_channel::<SoundFn>(100);
         let source = SamplesSource {
-            sample_func: Box::new(|t| (t * 2.0 * 3.141592 * 440.0).sin()),
+            sample_func: Box::new(|_| 0.0),
             receiver,
             t: 0,
         };

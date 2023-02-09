@@ -33,7 +33,7 @@ enum MStmt{
 type E = Box<MExpr>;
 
 fn main() {
-    let (_, stream_handle) = OutputStream::try_default().unwrap();
+    let (_stream, stream_handle) = OutputStream::try_default().unwrap();
     let sink = Sink::try_new(&stream_handle).unwrap();
     let tau = 2.0 * PI;
     let sample_func = Box::new(move |t:f32|{

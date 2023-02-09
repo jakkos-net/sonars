@@ -8,20 +8,13 @@ edition = "2021"
 [dependencies]
 bevy = "0.7.0"
 bevy_egui = "0.14.0"
-bevy_kira_audio = "0.10.0"
+rodio = {version = "0.16.0", default-features = false}
+
 
 [features]
-default = [
-    "bevy/bevy_winit",
-    "bevy/render",
-    "bevy/png",
-    "bevy/x11",
-    "bevy_kira_audio/ogg"
-]
+default = ["bevy/bevy_winit", "bevy/render", "bevy/png", "bevy/x11"]
 
-dev = [
-    "bevy/dynamic",
-]
+dev = ["bevy/dynamic"]
 
 
 [target.'cfg(target_os = "linux")'.dependencies]

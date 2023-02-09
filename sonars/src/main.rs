@@ -1,248 +1,159 @@
-use bevy::{
-    core_pipeline::node::MAIN_PASS_DEPENDENCIES,
-    prelude::*,
-    render::{
-        render_asset::RenderAssets,
-        render_graph::{self, RenderGraph},
-        render_resource::*,
-        renderer::{RenderContext, RenderDevice},
-        RenderApp, RenderStage,
+use rodio::{ Source};
+use rodio::{OutputStream, Sink};
+use std::{
+
+    f32::consts::PI,
+    sync::{
+        atomic::{AtomicBool, Ordering},
+        Arc, Mutex, MutexGuard, TryLockError,
     },
-    window::WindowDescriptor,
+    thread::sleep,
+    time::{Duration, Instant},
 };
-use bevy_egui::{egui, EguiContext, EguiPlugin};
 
-use std::borrow::Cow;
+const SAMPLE_RATE: u32 = 48_000;
+const INV_SAMPLE_RATE: f32 = 1.0 / (SAMPLE_RATE as f32);
 
-const SIZE: (u32, u32) = (1280, 720);
-const WORKGROUP_SIZE: u32 = 8;
+enum MExpr{
+    Sin(E),
+    Add(E, E),
+    Mul(E, E),
+    Div(E, E),
+    Sub(E, E),
+    Mod(E, E),
+    Pow(E,E),
+    Num(f32),
+    Invoke(String),
+    Time
+}
+
+
+enum MStmt{
+    Assign(String, Vec<String>, MExpr)
+}
+
+
+type E = Box<MExpr>;
+
 fn main() {
-    App::new()
-        .insert_resource(ClearColor(Color::BLACK))
-        .insert_resource(Code("Hello!".to_string()))
-        .add_plugins(DefaultPlugins)
-        .add_plugin(EguiPlugin)
-        // Systems that create Egui widgets should be run during the `CoreStage::Update` stage,
-        // or after the `EguiSystem::BeginFrame` system (which belongs to the `CoreStage::PreUpdate` stage).
+    let (_stream, stream_handle) = OutputStream::try_default().unwrap();
+    let sink = Sink::try_new(&stream_handle).unwrap();
 
-        .add_plugin(GameOfLifeComputePlugin)
-        .add_startup_system(setup)
-        
-        .add_system(ui)
-        .run();
-}
+    // Add a dummy source of the sake of the example.
+    let start_time = Instant::now();
+    let samples: Arc<Samples> = Default::default();
+    let source = SamplesSource {
+        samples: samples.clone(),
+        t: (Instant::now() - start_time).as_secs_f32(),
+    };
+    // let source = SineWave::new(440.0);
+    sink.append(source.amplify(0.3));
 
-fn ui(mut egui_context: ResMut<EguiContext>, mut code : ResMut<Code>) {
-    egui::Window::new("Editor").show(egui_context.ctx_mut(), |ui| {
-        ui.code_editor(&mut code.0);
-    });
-}
+    
+    let tau = 2.0 * PI;
+    let hz = 440.0;
+    samples
+        .try_set(Box::new(move |t|{
 
-#[derive(Default)]
-struct Code(String);
+            let outer_wave = (t * tau).sin().abs();
+            let outer_wave2 = (t * tau + tau*0.25).sin().abs();
+            let inner_wave =  |a:f32| (t * tau * a).sin().round();
+            let detune = |func: &dyn Fn(f32) -> f32, input:f32, detune:f32|  (func(input - detune) + func(input) + func(input + detune))/3.0;
+            let res = outer_wave * detune(&inner_wave, 440.0, 1.2) * outer_wave2;
+            res.clamp(-1.0, 1.0)
+        })).unwrap();
 
-fn setup(mut commands: Commands, mut images: ResMut<Assets<Image>>) {
-    let mut image = Image::new_fill(
-        Extent3d {
-            width: SIZE.0,
-            height: SIZE.1,
-            depth_or_array_layers: 1,
-        },
-        TextureDimension::D2,
-        &[0, 0, 0, 255],
-        TextureFormat::Rgba8Unorm,
-    );
-    image.texture_descriptor.usage =
-        TextureUsages::COPY_DST | TextureUsages::STORAGE_BINDING | TextureUsages::TEXTURE_BINDING;
-    let image = images.add(image);
-
-    commands.spawn_bundle(SpriteBundle {
-        sprite: Sprite {
-            custom_size: Some(Vec2::new(SIZE.0 as f32, SIZE.1 as f32)),
-            ..default()
-        },
-        texture: image.clone(),
-        ..default()
-    });
-    commands.spawn_bundle(OrthographicCameraBundle::new_2d());
-
-    commands.insert_resource(GameOfLifeImage(image));
-}
-
-pub struct GameOfLifeComputePlugin;
-
-impl Plugin for GameOfLifeComputePlugin {
-    fn build(&self, app: &mut App) {
-        let render_app = app.sub_app_mut(RenderApp);
-        render_app
-            .init_resource::<GameOfLifePipeline>()
-            .add_system_to_stage(RenderStage::Extract, extract_game_of_life_image)
-            .add_system_to_stage(RenderStage::Queue, queue_bind_group);
-
-        let mut render_graph = render_app.world.resource_mut::<RenderGraph>();
-        render_graph.add_node("game_of_life", GameOfLifeNode::default());
-        render_graph
-            .add_node_edge("game_of_life", MAIN_PASS_DEPENDENCIES)
-            .unwrap();
+    loop{
+        sleep(Duration::from_secs(1))
     }
 }
-
-#[derive(Deref)]
-struct GameOfLifeImage(Handle<Image>);
-struct GameOfLifeImageBindGroup(BindGroup);
-
-fn extract_game_of_life_image(mut commands: Commands, image: Res<GameOfLifeImage>) {
-    commands.insert_resource(GameOfLifeImage(image.clone()));
+pub struct Samples {
+    buffer_a: Mutex<Box<dyn Fn(f32) -> f32 + Send>>,
+    buffer_b: Mutex<Box<dyn Fn(f32) -> f32 + Send>>,
+    a_is_read: AtomicBool,
+    pending_switch: AtomicBool,
 }
 
-fn queue_bind_group(
-    mut commands: Commands,
-    pipeline: Res<GameOfLifePipeline>,
-    gpu_images: Res<RenderAssets<Image>>,
-    game_of_life_image: Res<GameOfLifeImage>,
-    render_device: Res<RenderDevice>,
-) {
-    let view = &gpu_images[&game_of_life_image.0];
-    let bind_group = render_device.create_bind_group(&BindGroupDescriptor {
-        label: None,
-        layout: &pipeline.texture_bind_group_layout,
-        entries: &[BindGroupEntry {
-            binding: 0,
-            resource: BindingResource::TextureView(&view.texture_view),
-        }],
-    });
-    commands.insert_resource(GameOfLifeImageBindGroup(bind_group));
-}
-
-pub struct GameOfLifePipeline {
-    texture_bind_group_layout: BindGroupLayout,
-    init_pipeline: CachedComputePipelineId,
-    update_pipeline: CachedComputePipelineId,
-}
-
-impl FromWorld for GameOfLifePipeline {
-    fn from_world(world: &mut World) -> Self {
-        let texture_bind_group_layout =
-            world
-                .resource::<RenderDevice>()
-                .create_bind_group_layout(&BindGroupLayoutDescriptor {
-                    label: None,
-                    entries: &[BindGroupLayoutEntry {
-                        binding: 0,
-                        visibility: ShaderStages::COMPUTE,
-                        ty: BindingType::StorageTexture {
-                            access: StorageTextureAccess::ReadWrite,
-                            format: TextureFormat::Rgba8Unorm,
-                            view_dimension: TextureViewDimension::D2,
-                        },
-                        count: None,
-                    }],
-                });
-        let shader = world
-            .resource::<AssetServer>()
-            .load("game_of_life.wgsl");
-        let mut pipeline_cache = world.resource_mut::<PipelineCache>();
-        let init_pipeline = pipeline_cache.queue_compute_pipeline(ComputePipelineDescriptor {
-            label: None,
-            layout: Some(vec![texture_bind_group_layout.clone()]),
-            shader: shader.clone(),
-            shader_defs: vec![],
-            entry_point: Cow::from("init"),
-        });
-        let update_pipeline = pipeline_cache.queue_compute_pipeline(ComputePipelineDescriptor {
-            label: None,
-            layout: Some(vec![texture_bind_group_layout.clone()]),
-            shader,
-            shader_defs: vec![],
-            entry_point: Cow::from("update"),
-        });
-
-        GameOfLifePipeline {
-            texture_bind_group_layout,
-            init_pipeline,
-            update_pipeline,
-        }
-    }
-}
-
-enum GameOfLifeState {
-    Loading,
-    Init,
-    Update,
-}
-
-struct GameOfLifeNode {
-    state: GameOfLifeState,
-}
-
-impl Default for GameOfLifeNode {
+impl Default for Samples {
     fn default() -> Self {
         Self {
-            state: GameOfLifeState::Loading,
+            buffer_a: Mutex::new(Box::new(|_| 0.0)),
+            buffer_b: Mutex::new(Box::new(|_| 0.0)),
+            a_is_read: AtomicBool::new(true),
+            pending_switch: AtomicBool::new(false),
         }
     }
 }
 
-impl render_graph::Node for GameOfLifeNode {
-    fn update(&mut self, world: &mut World) {
-        let pipeline = world.resource::<GameOfLifePipeline>();
-        let pipeline_cache = world.resource::<PipelineCache>();
-
-        // if the corresponding pipeline has loaded, transition to the next stage
-        match self.state {
-            GameOfLifeState::Loading => {
-                if let CachedPipelineState::Ok(_) =
-                    pipeline_cache.get_compute_pipeline_state(pipeline.init_pipeline)
-                {
-                    self.state = GameOfLifeState::Init
-                }
-            }
-            GameOfLifeState::Init => {
-                if let CachedPipelineState::Ok(_) =
-                    pipeline_cache.get_compute_pipeline_state(pipeline.update_pipeline)
-                {
-                    self.state = GameOfLifeState::Update
-                }
-            }
-            GameOfLifeState::Update => {}
+impl Samples {
+    pub fn read(&self, t: f32) -> f32 {
+        if self.pending_switch.load(Ordering::Relaxed) {
+            self.a_is_read.fetch_xor(true, Ordering::Relaxed);
+            self.pending_switch.store(false, Ordering::Relaxed);
         }
+
+        let buffer = if self.a_is_read.load(Ordering::Relaxed) {
+            self.buffer_a.lock().unwrap()
+        } else {
+            self.buffer_b.lock().unwrap()
+        };
+
+        buffer(t)
     }
 
-    fn run(
+    pub fn try_set(
         &self,
-        _graph: &mut render_graph::RenderGraphContext,
-        render_context: &mut RenderContext,
-        world: &World,
-    ) -> Result<(), render_graph::NodeRunError> {
-        let texture_bind_group = &world.resource::<GameOfLifeImageBindGroup>().0;
-        let pipeline_cache = world.resource::<PipelineCache>();
-        let pipeline = world.resource::<GameOfLifePipeline>();
-
-        let mut pass = render_context
-            .command_encoder
-            .begin_compute_pass(&ComputePassDescriptor::default());
-
-        pass.set_bind_group(0, texture_bind_group, &[]);
-
-        // select the pipeline based on the current state
-        match self.state {
-            GameOfLifeState::Loading => {}
-            GameOfLifeState::Init => {
-                let init_pipeline = pipeline_cache
-                    .get_compute_pipeline(pipeline.init_pipeline)
-                    .unwrap();
-                pass.set_pipeline(init_pipeline);
-                pass.dispatch(SIZE.0 / WORKGROUP_SIZE, SIZE.1 / WORKGROUP_SIZE, 1);
-            }
-            GameOfLifeState::Update => {
-                let update_pipeline = pipeline_cache
-                    .get_compute_pipeline(pipeline.update_pipeline)
-                    .unwrap();
-                pass.set_pipeline(update_pipeline);
-                pass.dispatch(SIZE.0 / WORKGROUP_SIZE, SIZE.1 / WORKGROUP_SIZE, 1);
+        f: Box<dyn Fn(f32) -> f32 + Send>,
+    ) -> Result<(), TryLockError<MutexGuard<dyn Fn(f32) -> f32 + Send>>> {
+        if !self.pending_switch.load(Ordering::Relaxed) {
+            if self.a_is_read.load(Ordering::Relaxed) {
+                if let Ok(mut buffer) = self.buffer_b.try_lock() {
+                    self.pending_switch.store(true, Ordering::Relaxed);
+                    *buffer = f;
+                    return Ok(())
+                }
+            } else {
+                if let Ok(mut buffer) = self.buffer_a.try_lock() {
+                    self.pending_switch.store(true, Ordering::Relaxed);
+                    *buffer = f;
+                    return Ok(())
+                }
             }
         }
 
-        Ok(())
+        Err(TryLockError::WouldBlock)
+    }
+}
+
+pub struct SamplesSource {
+    samples: Arc<Samples>,
+    t: f32,
+}
+
+impl Source for SamplesSource {
+    fn current_frame_len(&self) -> Option<usize> {
+        None
+    }
+
+    fn channels(&self) -> u16 {
+        1
+    }
+
+    fn sample_rate(&self) -> u32 {
+        SAMPLE_RATE
+    }
+
+    fn total_duration(&self) -> Option<std::time::Duration> {
+        None
+    }
+}
+
+impl Iterator for SamplesSource {
+    type Item = f32;
+
+    fn next(&mut self) -> Option<Self::Item> {
+        let f = self.samples.read(self.t);
+        self.t += INV_SAMPLE_RATE;
+        Some(f)
     }
 }

@@ -1,5 +1,5 @@
 use std::{sync::mpsc::{SyncSender, sync_channel, Receiver}};
-use bevy::prelude::Plugin;
+use bevy::prelude::{Plugin, Resource};
 
 use rodio::{Sink, OutputStream, Source};
 
@@ -9,7 +9,8 @@ const INV_SAMPLE_RATE: f32 = 1.0 / (SAMPLE_RATE as f32);
 pub struct SoundPlugin;
 
 // If the stream or sink are dropped, we lose sound output.
-// So we need to keep them, however, they aren't currently used
+// So we need to keep them, however, they aren't currently used\
+
 pub struct SoundSystemResources{
     _stream: OutputStream,
     _sink: Sink
@@ -36,6 +37,7 @@ impl Plugin for SoundPlugin{
     }
 }
 
+#[derive(Resource)]
 pub struct SoundControl{
     sender: SyncSender<SoundFn>
 }

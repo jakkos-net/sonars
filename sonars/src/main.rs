@@ -22,6 +22,7 @@ fn main() {
 
 }
 
+#[derive(Resource)]
 struct CodeEditorData{
     pub src: String,
     pub error_text: String, 

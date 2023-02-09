@@ -1,4 +1,5 @@
 pub mod sound;
+pub mod lang;
 
 use std::f32::consts::PI;
 use bevy::prelude::*;
@@ -31,7 +32,9 @@ impl Default for CodeSource{
 
 fn coding_ui(mut egui_context: ResMut<EguiContext>, mut source: ResMut<CodeSource>) {
     egui::Window::new("Editor").show(egui_context.ctx_mut(), |ui| {
-        ui.text_edit_multiline(&mut source.0);
+        if ui.text_edit_multiline(&mut source.0).changed(){
+
+        };
     });
 }
 

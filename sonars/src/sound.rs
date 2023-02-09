@@ -15,11 +15,13 @@ pub struct SoundSystemResources{
     _sink: Sink
 }
 
+pub type SoundFn = Box<dyn Fn(f32) -> f32 + Send + Sync>;
+
 impl Plugin for SoundPlugin{
     fn build(&self, app: &mut bevy::prelude::App) {
         let (stream, stream_handle) = OutputStream::try_default().unwrap();
         let sink = Sink::try_new(&stream_handle).unwrap();
-        let (sender,receiver) = sync_channel::<Box<dyn Fn(f32) -> f32 + Send + Sync>>(100);
+        let (sender,receiver) = sync_channel::<SoundFn>(100);
         let source = SamplesSource {
             sample_func: Box::new(|t| (t * 2.0 * 3.141592 * 440.0).sin()),
             receiver,
@@ -35,19 +37,19 @@ impl Plugin for SoundPlugin{
 }
 
 pub struct SoundControl{
-    sender: SyncSender<Box<dyn Fn(f32) -> f32 + Send + Sync>>
+    sender: SyncSender<SoundFn>
 }
 
 impl SoundControl{
-    pub fn set(&self, f:Box<dyn Fn(f32) -> f32 + Send + Sync>)
+    pub fn set(&self, f:SoundFn)
     {
         self.sender.send(f).ok();
     }
 }
 
 pub struct SamplesSource {
-    sample_func: Box<dyn Fn(f32) -> f32 + Send + Sync>,
-    receiver: Receiver<Box<dyn Fn(f32) -> f32 + Send + Sync>>,
+    sample_func: SoundFn,
+    receiver: Receiver<SoundFn>,
     t: usize
 }
 

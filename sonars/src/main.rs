@@ -11,15 +11,27 @@ fn main() {
         .add_plugins(DefaultPlugins)
         .add_plugin(EguiPlugin)
         .add_plugin(SoundPlugin)
+
+        .init_resource::<CodeSource>()
+
         .add_startup_system(start_sound)
-        .add_system(ui_example)
+
+        .add_system(coding_ui)
         .run();
 
 }
 
-fn ui_example(mut egui_context: ResMut<EguiContext>) {
-    egui::Window::new("Hello").show(egui_context.ctx_mut(), |ui| {
-        ui.label("world");
+struct CodeSource(pub String);
+
+impl Default for CodeSource{
+    fn default() -> Self {
+        Self("Woo I'm some source code... Apparently...".into())
+    }
+}
+
+fn coding_ui(mut egui_context: ResMut<EguiContext>, mut source: ResMut<CodeSource>) {
+    egui::Window::new("Editor").show(egui_context.ctx_mut(), |ui| {
+        ui.text_edit_multiline(&mut source.0);
     });
 }
 

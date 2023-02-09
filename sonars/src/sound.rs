@@ -1,43 +1,35 @@
 use std::{sync::mpsc::{SyncSender, sync_channel, Receiver}};
 use bevy::prelude::Plugin;
 
-use once_cell::sync::OnceCell;
 use rodio::{Sink, OutputStream, Source};
 
 const SAMPLE_RATE: u32 = 48_000;
 const INV_SAMPLE_RATE: f32 = 1.0 / (SAMPLE_RATE as f32);
 
-// To keep sound playing, I need to stop the Stream
-// and the Sink from being dropped.
-static STREAM: OnceCell<Stream> = OnceCell::new();
-static SINK: OnceCell<Sink> = OnceCell::new();
-
-// todo_major come up with a better solution
-// However, OutputStream is not sent...
-// BIG SCARY UNSAFE MAKES ME SAD :'(
-// this should be fine as you can't 
-// actually access the OutputStream inside
-unsafe impl Sync for Stream{}
-unsafe impl Send for Stream{}
-struct Stream(OutputStream);
-
 pub struct SoundPlugin;
+
+// If the stream or sink are dropped, we lose sound output.
+// So we need to keep them, however, they aren't currently used
+pub struct SoundSystemResources{
+    _stream: OutputStream,
+    _sink: Sink
+}
 
 impl Plugin for SoundPlugin{
     fn build(&self, app: &mut bevy::prelude::App) {
-
         let (stream, stream_handle) = OutputStream::try_default().unwrap();
-        STREAM.set(Stream(stream)).ok();
-        SINK.set(Sink::try_new(&stream_handle).unwrap()).ok();
-
+        let sink = Sink::try_new(&stream_handle).unwrap();
         let (sender,receiver) = sync_channel::<Box<dyn Fn(f32) -> f32 + Send + Sync>>(100);
         let source = SamplesSource {
             sample_func: Box::new(|t| (t * 2.0 * 3.141592 * 440.0).sin()),
             receiver,
             t: 0,
         };
-        SINK.get().unwrap().append(source);
-
+        sink.append(source);
+        app.insert_non_send_resource(SoundSystemResources{
+            stream,
+            sink
+        });
         app.insert_resource(SoundControl{sender});
     }
 }

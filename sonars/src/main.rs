@@ -5,20 +5,6 @@ use bevy::prelude::*;
 use bevy_egui::{egui, EguiContext, EguiPlugin};
 use sound::{SoundControl, SoundPlugin};
 
-enum MExpr{
-    Sin(E),
-    Add(E, E),
-    Mul(E, E),
-    Div(E, E),
-    Sub(E, E),
-    Mod(E, E),
-    Pow(E,E),
-    Num(f32),
-    Invoke(String),
-    Time
-}
-
-
 fn main() {
 
     App::new()
@@ -36,14 +22,6 @@ fn ui_example(mut egui_context: ResMut<EguiContext>) {
         ui.label("world");
     });
 }
-
-
-enum MStmt{
-    Assign(String, Vec<String>, MExpr)
-}
-
-
-type E = Box<MExpr>;
 
 fn start_sound(sound: Res<SoundControl>) {
 

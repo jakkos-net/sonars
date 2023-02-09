@@ -1,15 +1,11 @@
-use rodio::{ Source, queue};
+use rodio::{ Source};
 use rodio::{OutputStream, Sink};
 use std::sync::mpsc::{channel, Receiver};
 use std::{
 
     f32::consts::PI,
-    sync::{
-        atomic::{AtomicBool, Ordering},
-        Arc, Mutex, MutexGuard, TryLockError,
-    },
     thread::sleep,
-    time::{Duration, Instant},
+    time::{Duration},
 };
 
 const SAMPLE_RATE: u32 = 48_000;
@@ -37,17 +33,9 @@ enum MStmt{
 type E = Box<MExpr>;
 
 fn main() {
-    let (_stream, stream_handle) = OutputStream::try_default().unwrap();
+    let (_, stream_handle) = OutputStream::try_default().unwrap();
     let sink = Sink::try_new(&stream_handle).unwrap();
-
-    // Add a dummy source of the sake of the example.
-    let start_time = Instant::now();
-    
-
-    
-    
     let tau = 2.0 * PI;
-    let hz = 440.0;
     let sample_func = Box::new(move |t:f32|{
 
         let outer_wave = (t * tau).sin().abs();

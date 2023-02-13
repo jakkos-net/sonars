@@ -5,6 +5,7 @@ use bevy::prelude::*;
 use bevy_egui::{egui, EguiContext, EguiPlugin};
 use lang::Program;
 use sound::{SoundControl, SoundPlugin};
+use wasm_bindgen::JsValue;
 
 fn main() {
 
@@ -37,11 +38,12 @@ impl Default for CodeEditorData{
     }
 }
 
-fn coding_ui(mut egui_context: ResMut<EguiContext>, mut editor_data: ResMut<CodeEditorData>, sound : Res<SoundControl>) {
+fn coding_ui(mut egui_context: ResMut<EguiContext>, mut editor_data: ResMut<CodeEditorData>, sound : NonSend<SoundControl>) {
     egui::Window::new("Editor").show(egui_context.ctx_mut(), |ui| {
         if ui.text_edit_multiline(&mut editor_data.src).changed(){
             editor_data.error_text = match Program::from_str(&editor_data.src){
                 Ok(p) => {
+
                     sound.set(p.to_fn().unwrap());
                     "Compilation succesful!".into()
                 },

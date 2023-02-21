@@ -2,4 +2,4 @@ run:
     cargo run -j-1
 
 web:
-    cargo run -j-1 --target wasm32-unknown-unknown
+    cargo run -j-1 --release --target wasm32-unknown-unknown

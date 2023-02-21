@@ -14,9 +14,7 @@ pub type SoundFn = Box<dyn Fn(f32) -> f32 + Send + Sync>;
 
 impl Plugin for SoundPlugin {
     fn build(&self, app: &mut bevy::prelude::App) {
-        let mut sound_control = SoundControl { ctx: None };
-        sound_control.set(Box::new(move |t| (t * 440.0 * 2.0 * PI).sin()));
-        app.insert_non_send_resource(sound_control);
+        app.insert_non_send_resource(SoundControl { ctx: None });
     }
 }
 

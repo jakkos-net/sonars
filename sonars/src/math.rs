@@ -1,6 +1,6 @@
 // 1-to-1 translated from https://github.com/brianhouse/bjorklund/blob/master/__init__.py
 
-fn bjorklund(steps: u8, pulses: u8) -> Vec<u8> {
+fn bjorklund(steps: u8, pulses: u8) -> Vec<bool> {
     if pulses > steps {
         panic!("Steps: {steps} cannot bigger than pulses: {pulses} in bjorklund algorithm!");
     }
@@ -44,7 +44,7 @@ fn bjorklund(steps: u8, pulses: u8) -> Vec<u8> {
     let result = pattern[i as usize..]
         .iter()
         .chain(pattern[0..i as usize].iter())
-        .cloned()
+        .map(|x| *x == 1)
         .collect::<Vec<_>>();
 
     result
@@ -56,25 +56,46 @@ mod tests {
 
     #[test]
     fn test_bjorklund() {
-        assert_eq!(bjorklund(2, 1), vec![1, 0]);
-        assert_eq!(bjorklund(7, 3), vec![1, 0, 1, 0, 1, 0, 0]);
-        assert_eq!(bjorklund(8, 4), vec![1, 0, 1, 0, 1, 0, 1, 0]);
-        assert_eq!(bjorklund(9, 1), vec![1, 0, 0, 0, 0, 0, 0, 0, 0]);
-        assert_eq!(bjorklund(10, 10), vec![1, 1, 1, 1, 1, 1, 1, 1, 1, 1]);
+        assert_eq!(bjorklund(2, 1), vec![true, false]);
+        assert_eq!(
+            bjorklund(7, 3),
+            vec![true, false, true, false, true, false, false]
+        );
+        assert_eq!(
+            bjorklund(8, 4),
+            vec![true, false, true, false, true, false, true, false]
+        );
+        assert_eq!(
+            bjorklund(9, 1),
+            vec![true, false, false, false, false, false, false, false, false]
+        );
+        assert_eq!(
+            bjorklund(10, 10),
+            vec![true, true, true, true, true, true, true, true, true, true]
+        );
         assert_eq!(
             bjorklund(16, 3),
-            vec![1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0]
+            vec![
+                true, false, false, false, false, true, false, false, false, false, true, false,
+                false, false, false, false
+            ]
         );
 
         assert_eq!(
             bjorklund(145, 92),
             vec![
-                1, 0, 1, 1, 0, 1, 1, 0, 1, 0, 1, 1, 0, 1, 1, 0, 1, 1, 0, 1, 0, 1, 1, 0, 1, 1, 0, 1,
-                1, 0, 1, 0, 1, 1, 0, 1, 1, 0, 1, 1, 0, 1, 0, 1, 1, 0, 1, 1, 0, 1, 0, 1, 1, 0, 1, 1,
-                0, 1, 1, 0, 1, 0, 1, 1, 0, 1, 1, 0, 1, 1, 0, 1, 0, 1, 1, 0, 1, 1, 0, 1, 1, 0, 1, 0,
-                1, 1, 0, 1, 1, 0, 1, 1, 0, 1, 0, 1, 1, 0, 1, 1, 0, 1, 0, 1, 1, 0, 1, 1, 0, 1, 1, 0,
-                1, 0, 1, 1, 0, 1, 1, 0, 1, 1, 0, 1, 0, 1, 1, 0, 1, 1, 0, 1, 1, 0, 1, 0, 1, 1, 0, 1,
-                1, 0, 1, 1, 0
+                true, false, true, true, false, true, true, false, true, false, true, true, false,
+                true, true, false, true, true, false, true, false, true, true, false, true, true,
+                false, true, true, false, true, false, true, true, false, true, true, false, true,
+                true, false, true, false, true, true, false, true, true, false, true, false, true,
+                true, false, true, true, false, true, true, false, true, false, true, true, false,
+                true, true, false, true, true, false, true, false, true, true, false, true, true,
+                false, true, true, false, true, false, true, true, false, true, true, false, true,
+                true, false, true, false, true, true, false, true, true, false, true, false, true,
+                true, false, true, true, false, true, true, false, true, false, true, true, false,
+                true, true, false, true, true, false, true, false, true, true, false, true, true,
+                false, true, true, false, true, false, true, true, false, true, true, false, true,
+                true, false
             ]
         );
     }

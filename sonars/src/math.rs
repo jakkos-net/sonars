@@ -57,7 +57,7 @@ fn bjorklund(steps: usize, pulses: usize) -> Vec<bool> {
     result
 }
 
-const BJORKLUND_CACHE_MAX: usize = 32;
+const BJORKLUND_CACHE_MAX: usize = 64;
 
 static CACHED_BJORKLUND: Lazy<Vec<bool>> = Lazy::new(|| {
     let mut vec = vec![false; BJORKLUND_CACHE_MAX * BJORKLUND_CACHE_MAX * BJORKLUND_CACHE_MAX];
@@ -90,6 +90,8 @@ pub fn pre_cache_maths() {
 
 #[cfg(test)]
 mod tests {
+    use crate::math::cached_bjorklund;
+
     use super::bjorklund;
 
     #[test]
@@ -136,5 +138,17 @@ mod tests {
                 true, false
             ]
         );
+    }
+
+    #[test]
+    fn test_cached_bjorklund() {
+        assert_eq!(bjorklund(16, 3)[3], cached_bjorklund(16, 3, 3));
+        assert_eq!(bjorklund(19, 12)[4], cached_bjorklund(19, 12, 4));
+        assert_eq!(bjorklund(8, 7)[1], cached_bjorklund(8, 7, 1));
+        assert_eq!(bjorklund(8, 7)[2], cached_bjorklund(8, 7, 2));
+        assert_eq!(bjorklund(23, 4)[3], cached_bjorklund(24, 4, 3));
+        for i in 0..32 {
+            assert_eq!(bjorklund(32, 7)[i], cached_bjorklund(32, 7, i));
+        }
     }
 }

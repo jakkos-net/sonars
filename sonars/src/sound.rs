@@ -6,7 +6,7 @@ use web_audio_api::{
     node::{AudioBufferSourceNode, AudioNode, AudioScheduledSourceNode, GainNode},
 };
 #[cfg(target_arch = "wasm32")]
-use web_sys::AudioContext;
+use web_sys::{AudioBufferSourceNode, AudioContext, GainNode};
 
 use crate::lang::compile;
 
@@ -73,9 +73,9 @@ impl SoundControl {
             if #[cfg(target_arch = "wasm32")] {
                 let new_buf = self.ctx.create_buffer_source().unwrap();
                 new_buf.set_loop(true);
-                new_buf.connect_with_audio_node(self.&gain).unwrap();
+                new_buf.connect_with_audio_node(&self.gain).unwrap();
                 new_buf.start().unwrap();
-                let buf_data = ctx
+                let buf_data = &self.ctx
                     .create_buffer(1, BUFFER_SIZE, SAMPLE_RATE as f32)
                     .unwrap();
                 buf_data.copy_to_channel(data.as_slice(), 0).unwrap();
@@ -87,7 +87,7 @@ impl SoundControl {
                     drop(old_buf);
                 }
 
-                buffer_node.set_buffer(Some(&buf_data));
+                new_buf.set_buffer(Some(&buf_data));
             } else {
                 let new_buf = self.ctx.create_buffer_source();
                 new_buf.set_loop(true);

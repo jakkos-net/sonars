@@ -50,4 +50,9 @@ pub fn compile(src: &str) -> anyhow::Result<SoundFn> {
 
 fn register_fns(engine: &mut Engine) {
     engine.register_fn("sin", |f: f32| (f * TAU).sin());
+    engine.register_fn("abs", |f: f32| f.abs());
+    engine.register_fn("pow", |n: f32, p: f32| n.powf(p));
+    engine.register_fn("ln", |n: f32| n.ln());
+    engine.register_fn("log", |n: f32, b: f32| n.log(b));
+    // engine.register_fn("euc", |t: f32, )
 }

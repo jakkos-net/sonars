@@ -1,6 +1,8 @@
 // 1-to-1 translated from https://github.com/brianhouse/bjorklund/blob/master/__init__.py
 
-fn bjorklund(steps: u8, pulses: u8) -> Vec<bool> {
+use once_cell::sync::Lazy;
+
+fn bjorklund(steps: usize, pulses: usize) -> Vec<bool> {
     if pulses > steps {
         panic!("Steps: {steps} cannot bigger than pulses: {pulses} in bjorklund algorithm!");
     }
@@ -22,7 +24,12 @@ fn bjorklund(steps: u8, pulses: u8) -> Vec<bool> {
     }
     counts.push(divisor);
 
-    fn build(pattern: &mut Vec<u8>, counts: &mut Vec<u8>, remainders: &mut Vec<u8>, level: i16) {
+    fn build(
+        pattern: &mut Vec<usize>,
+        counts: &mut Vec<usize>,
+        remainders: &mut Vec<usize>,
+        level: isize,
+    ) {
         if level == -1 {
             pattern.push(0);
         } else if level == -2 {
@@ -38,7 +45,7 @@ fn bjorklund(steps: u8, pulses: u8) -> Vec<bool> {
         }
     }
 
-    let level = level as i16;
+    let level = level as isize;
     build(&mut pattern, &mut counts, &mut remainders, level);
     let i = pattern.iter().position(|x| *x == 1).unwrap();
     let result = pattern[i as usize..]
@@ -48,6 +55,37 @@ fn bjorklund(steps: u8, pulses: u8) -> Vec<bool> {
         .collect::<Vec<_>>();
 
     result
+}
+
+const BJORKLUND_CACHE_MAX: usize = 32;
+
+static CACHED_BJORKLUND: Lazy<Vec<bool>> = Lazy::new(|| {
+    let mut vec = vec![false; BJORKLUND_CACHE_MAX * BJORKLUND_CACHE_MAX * BJORKLUND_CACHE_MAX];
+    for steps in 1..=BJORKLUND_CACHE_MAX {
+        for pulses in 1..=steps {
+            let pattern = bjorklund(steps, pulses);
+            for (index, val) in pattern.into_iter().enumerate() {
+                let combined_index = cached_bjorklund_index(steps, pulses, index);
+                vec[combined_index] = val;
+            }
+        }
+    }
+
+    vec
+});
+
+fn cached_bjorklund_index(steps: usize, pulses: usize, index: usize) -> usize {
+    let steps_offset = (steps - 1) as usize * BJORKLUND_CACHE_MAX * BJORKLUND_CACHE_MAX;
+    let pulses_offset = (pulses - 1) as usize * BJORKLUND_CACHE_MAX;
+    steps_offset + pulses_offset + index as usize
+}
+
+pub fn cached_bjorklund(steps: usize, pulses: usize, index: usize) -> bool {
+    CACHED_BJORKLUND[cached_bjorklund_index(steps, pulses, index)]
+}
+
+pub fn pre_cache_maths() {
+    CACHED_BJORKLUND[0];
 }
 
 #[cfg(test)]

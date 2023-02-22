@@ -61,6 +61,11 @@ impl SoundControl {
             buf: None,
         }
     }
+
+    pub fn is_playing(&self) -> bool {
+        self.buf.is_some()
+    }
+
     pub fn set(&mut self, src: &str) -> anyhow::Result<()> {
         let sound_fn = compile(src)?;
 

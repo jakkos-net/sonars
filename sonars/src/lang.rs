@@ -43,7 +43,7 @@ pub fn compile(src: &str) -> anyhow::Result<SoundFn> {
         bail!("source code does not evalulate to a number!\n{e}")
     }
 
-    let sound_fn = Box::new(move |f| (inner_fn)(f).unwrap());
+    let sound_fn = Box::new(move |f| (inner_fn)(f).unwrap().clamp(-1.0, 1.0));
 
     Ok(sound_fn)
 }

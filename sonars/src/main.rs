@@ -3,7 +3,6 @@ pub mod sound;
 
 use bevy::prelude::*;
 use bevy_egui::{egui, EguiContext, EguiPlugin};
-use lang::Program;
 use sound::{SoundControl, SoundPlugin};
 
 fn main() {
@@ -38,13 +37,10 @@ fn coding_ui(
 ) {
     egui::Window::new("Editor").show(egui_context.ctx_mut(), |ui| {
         if ui.text_edit_multiline(&mut editor_data.src).changed() {
-            editor_data.error_text = match Program::from_str(&editor_data.src) {
-                Ok(p) => {
-                    sound.set(p.to_fn().unwrap());
-                    "Compilation succesful!".into()
-                }
+            editor_data.error_text = match sound.set(&editor_data.src) {
+                Ok(()) => "Compilation succesful!".into(),
                 Err(e) => e.to_string(),
-            }
+            };
         };
         ui.label(&editor_data.error_text);
     });

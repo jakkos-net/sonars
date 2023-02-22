@@ -1,50 +1,53 @@
-use std::f32::consts::PI;
+use std::f32::consts::TAU;
 
-use thiserror::Error;
+use anyhow::bail;
+use rhai::{Engine, Func};
 
 use crate::sound::SoundFn;
 
-enum Expression {
-    Sin(E, E),
-    Add(E, E),
-    Mul(E, E),
-    Div(E, E),
-    Sub(E, E),
-    Mod(E, E),
-    Pow(E, E),
-    Num(f32),
-    Invoke(String),
-    Time,
-}
-type E = Box<Expression>;
+// Munk: a "meditative" ;), musical, funKtional language.
 
-pub struct Program {
-    expr: Expression,
-}
+// struct Munk {}
 
-impl Program {
-    pub fn from_str(src: &str) -> Result<Self, ParsingError> {
-        if let Ok(hz) = src.parse::<f32>() {
-            Ok(Program { hz })
-        } else {
-            Err(ParsingError::Unknown)
-        }
+// impl Munk {
+//     fn from_source() {
+
+//     }
+
+//     fn to_fn(){
+
+//     }
+
+//     fn to_rhai(){
+
+//     }
+// }
+
+// temp, just compile rhai language
+pub fn compile(src: &str) -> anyhow::Result<SoundFn> {
+    let mut engine = Engine::new();
+    engine.set_optimization_level(rhai::OptimizationLevel::Full);
+    register_fns(&mut engine);
+
+    let script = format!(
+        "
+            fn main (t) {{
+                {src}
+            }}
+        "
+    );
+
+    let inner_fn = Func::<(f32,), f32>::create_from_script(engine, &script, "main")?;
+
+    if let Err(e) = inner_fn(1.0) {
+        bail!("source code does not evalulate to a number!\n{e}")
     }
 
-    pub fn to_fn(&self) -> Result<SoundFn, CompilationError> {
-        let hz = self.hz;
-        Ok(Box::new(move |t| (t * hz * 2.0 * PI).sin()))
-    }
+    let sound_fn = Box::new(move |f| (inner_fn)(f).unwrap());
+
+    Ok(sound_fn)
 }
 
-#[derive(Error, Debug)]
-pub enum ParsingError {
-    #[error("Unknown parsing error")]
-    Unknown,
-}
-
-#[derive(Error, Debug)]
-pub enum CompilationError {
-    #[error("Unknown compilation error")]
-    Unknown,
+fn register_fns(engine: &mut Engine) {
+    engine.register_fn("sin", |f: f32| (f * TAU).sin());
 }

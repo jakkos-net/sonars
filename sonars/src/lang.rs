@@ -3,7 +3,7 @@ use std::f32::consts::TAU;
 use anyhow::bail;
 use rhai::{Engine, Func};
 
-use crate::sound::SoundFn;
+use crate::{math::cached_bjorklund, sound::SoundFn};
 
 // Munk: a "meditative" ;), musical, funKtional language.
 
@@ -54,5 +54,12 @@ fn register_fns(engine: &mut Engine) {
     engine.register_fn("pow", |n: f32, p: f32| n.powf(p));
     engine.register_fn("ln", |n: f32| n.ln());
     engine.register_fn("log", |n: f32, b: f32| n.log(b));
-    // engine.register_fn("euc", |t: f32, )
+    engine.register_fn("euc", |steps: f32, pulses: f32, t: f32| {
+        let index = (steps * (t % 1.0)) as usize;
+        if cached_bjorklund(steps as usize, pulses as usize, index) {
+            1.0_f32
+        } else {
+            0.0_f32
+        }
+    });
 }

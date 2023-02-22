@@ -12,7 +12,7 @@ use crate::lang::compile;
 
 const SAMPLE_RATE: u32 = 48_000;
 const INV_SAMPLE_RATE: f32 = 1.0 / (SAMPLE_RATE as f32);
-const BUFFER_SIZE: u32 = SAMPLE_RATE;
+const BUFFER_SIZE: u32 = SAMPLE_RATE * 2;
 
 pub struct SoundPlugin;
 

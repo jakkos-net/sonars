@@ -1,10 +1,10 @@
 pub mod lang;
-pub mod sound;
 pub mod math;
+pub mod sound;
 
 use bevy::{prelude::*, time::Stopwatch};
 use bevy_egui::{
-    egui::{self, DragValue, TextEdit},
+    egui::{self, CollapsingHeader, DragValue, TextEdit},
     EguiContext, EguiPlugin,
 };
 use sound::{SoundControl, SoundPlugin};
@@ -32,8 +32,7 @@ struct CodeEditorData {
 impl Default for CodeEditorData {
     fn default() -> Self {
         Self {
-            src: "sin(330.0 * t) + sin(35.0 * t) * sin(3.0 * t) + sin(660.0 * t) * sin(23.0 * t) * sin(0.75 * t)"
-                .into(),
+            src: "sin(330.0*t) * sin(33.0*t) * euc(7., 3., t)".into(),
             error_text: "".into(),
             last_edit: Stopwatch::new(),
             waiting_to_compile: false,
@@ -50,7 +49,7 @@ fn coding_ui(
     time: Res<Time>,
 ) {
     egui::Window::new("Editor").show(egui_context.ctx_mut(), |ui| {
-        let text_edit = ui.add(TextEdit::multiline(&mut editor.src).code_editor());
+        let text_edit = ui.add(TextEdit::multiline(&mut editor.src).code_editor().desired_rows(20).desired_width(600.0));
         editor.last_edit.tick(time.delta());
 
         if text_edit.changed() {
@@ -93,5 +92,17 @@ fn coding_ui(
         }
 
         ui.label(&editor.error_text);
+
+        CollapsingHeader::new("Notes").default_open(true).show(ui,|ui|{
+            ui.label("t is the current time in seconds");
+            ui.label("Currently, numbers have to have a decimal point, e.g. you have to write 7. instead of 7");
+            ui.label("Currently, program only loops 2 seconds of audio");
+            ui.label("sin(t) -> sine of t, where t is in seconds, 1 cycle per second");
+            ui.label("abs(t) -> absolute value of t");
+            ui.label("euc(steps, pulses, t) -> euclidean rhythm, pulses cannot be bigger than steps");
+            ui.label("ln(t) -> natural log of t");
+            ui.label("log(t, p) -> log of t, base p");
+            ui.label("power(t, p) -> t to the power of p");
+        });
     });
 }

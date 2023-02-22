@@ -1,6 +1,10 @@
 // 1-to-1 translated from https://github.com/brianhouse/bjorklund/blob/master/__init__.py
 
 fn bjorklund(steps: u8, pulses: u8) -> Vec<u8> {
+    if pulses > steps {
+        panic!("Steps: {steps} cannot bigger than pulses: {pulses} in bjorklund algorithm!");
+    }
+
     let mut pattern = vec![];
     let mut counts = vec![];
     let mut remainders = vec![];

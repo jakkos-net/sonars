@@ -1,6 +1,7 @@
 pub mod lang;
 pub mod math;
 pub mod sound;
+pub mod visuals;
 
 use bevy::{prelude::*, time::Stopwatch};
 use bevy_egui::{

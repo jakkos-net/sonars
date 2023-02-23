@@ -62,4 +62,12 @@ fn register_fns(engine: &mut Engine) {
             0.0_f32
         }
     });
+    engine.register_fn("frc", |f: f32| f.fract());
+    engine.register_fn("flr", |f: f32| f.floor());
+    engine.register_fn("cei", |f: f32| f.ceil());
+    // engine.register_fn("env", |a:f32, d:f32, s:f32, r:f32| )
+    engine.register_fn("lrp", |a: f32, b: f32, t: f32| (1.0 - t) * a + t * b);
+    engine.register_fn("rfl", |f: f32| (-1.0 + (f % 2.0)).abs());
+    engine.register_fn("saw", |f: f32| 2.0 * (f - (0.5 + f).floor()));
+    engine.register_fn("sqw", |f: f32| (1.0 - (f % 2.0).floor()));
 }

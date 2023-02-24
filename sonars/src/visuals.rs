@@ -1,12 +1,6 @@
 use bevy_egui::egui::{emath, epaint, vec2, Color32, Frame, Pos2, Rect, Stroke, Ui};
 
 pub fn test_visuals(ui: &mut Ui) {
-    let color = if ui.visuals().dark_mode {
-        Color32::from_additive_luminance(196)
-    } else {
-        Color32::from_black_alpha(240)
-    };
-
     // adapted from the egui.rs dancing strings demo
     Frame::canvas(ui.style()).show(ui, |ui| {
         ui.ctx().request_repaint();
@@ -20,7 +14,7 @@ pub fn test_visuals(ui: &mut Ui) {
 
         let mode = 5.0;
         let n = 120;
-        let speed = 1.5;
+        let speed = 3.0;
 
         let points: Vec<Pos2> = (0..=n)
             .map(|i| {
@@ -32,6 +26,7 @@ pub fn test_visuals(ui: &mut Ui) {
             .collect();
 
         let thickness = 10.0 / mode as f32;
+        let color = Color32::from_additive_luminance(255);
         ui.painter()
             .add(epaint::Shape::line(points, Stroke::new(thickness, color)));
     });

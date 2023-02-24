@@ -9,6 +9,7 @@ use bevy_egui::{
     EguiContext, EguiPlugin,
 };
 use sound::{SoundControl, SoundPlugin};
+use visuals::test_visuals;
 
 fn main() {
     App::new()
@@ -17,6 +18,7 @@ fn main() {
         .add_plugin(SoundPlugin)
         .init_resource::<CodeEditorData>()
         .add_system(coding_ui)
+        .add_system(visuals)
         .run();
 }
 
@@ -106,4 +108,8 @@ fn coding_ui(
             ui.label("power(t, p) -> t to the power of p");
         });
     });
+}
+
+fn visuals(mut egui_context: ResMut<EguiContext>) {
+    egui::Window::new("Visuals").show(egui_context.ctx_mut(), |ui| test_visuals(ui));
 }

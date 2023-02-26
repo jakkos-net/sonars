@@ -5,23 +5,51 @@ use rhai::{Engine, Func};
 
 use crate::{math::cached_bjorklund, sound::SoundFn};
 
-// Munk: a "meditative" ;), musical, funKtional language.
+enum Expr{
+    Var(String),
+    Num(f32),
+    List(Vec<Expr>)
+}
 
-// struct Munk {}
 
-// impl Munk {
-//     fn from_source() {
+struct Program {
+    exprs: Vec<Expr>
+}
 
-//     }
+impl Program {
+    fn from_source(src: &str) -> anyhow::Result<Self> {
+        let parts = src.split_ascii_whitespace();
 
-//     fn to_fn(){
+    }
 
-//     }
+    fn thing(mut parts: impl Iterator<Item = &str>){
+        match parts.next(){
+            Some(part) => match part{
+                "(" => {
+                    let elems = parts.take_while(|part| part != ")");
+                    let closing = parts.next()
+                },
+                ")" => (),
+                other => {
+                    if let Ok(num) = other.parse(){
+                        Expr::Num(num)
+                    } else {
+                        Expr::Var(other.into())
+                    }
+                }
+            },
+            None => todo!(),
+        }
+    }
 
-//     fn to_rhai(){
+    fn to_fn() -> anyhow::Result<SoundFn>{
 
-//     }
-// }
+    }
+
+    fn to_rhai(){
+
+    }
+}
 
 // temp, just compile rhai language
 pub fn compile(src: &str) -> anyhow::Result<SoundFn> {

@@ -5,36 +5,36 @@ use rhai::{Engine, Func};
 
 use crate::{math::cached_bjorklund, sound::SoundFn};
 
-enum Expr{
+enum Expr {
     Var(String),
     Num(f32),
-    List(Vec<Expr>)
+    List(Vec<Expr>),
 }
 
-
 struct Program {
-    exprs: Vec<Expr>
+    exprs: Vec<Expr>,
 }
 
 impl Program {
     fn from_source(src: &str) -> anyhow::Result<Self> {
         let parts = src.split_ascii_whitespace();
 
+        todo!();
     }
 
-    fn thing(mut parts: impl Iterator<Item = &str>){
-        match parts.next(){
-            Some(part) => match part{
+    fn thing<'a>(mut parts: impl Iterator<Item = &'a str>) {
+        match parts.next() {
+            Some(part) => match part {
                 "(" => {
-                    let elems = parts.take_while(|part| part != ")");
-                    let closing = parts.next()
-                },
+                    let elems = parts.take_while(|part| *part != ")");
+                    // let closing = parts.next();
+                }
                 ")" => (),
                 other => {
-                    if let Ok(num) = other.parse(){
-                        Expr::Num(num)
+                    if let Ok(num) = other.parse() {
+                        Expr::Num(num);
                     } else {
-                        Expr::Var(other.into())
+                        Expr::Var(other.into());
                     }
                 }
             },
@@ -42,13 +42,11 @@ impl Program {
         }
     }
 
-    fn to_fn() -> anyhow::Result<SoundFn>{
-
+    fn to_fn() -> anyhow::Result<SoundFn> {
+        todo!()
     }
 
-    fn to_rhai(){
-
-    }
+    fn to_rhai() {}
 }
 
 // temp, just compile rhai language

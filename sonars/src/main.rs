@@ -8,6 +8,7 @@ use bevy_egui::{
     egui::{self, CollapsingHeader, DragValue, TextEdit},
     EguiContext, EguiPlugin,
 };
+use lang::compile;
 use sound::{SoundControl, SoundPlugin};
 use visuals::test_visuals;
 
@@ -74,9 +75,12 @@ fn coding_ui(
             ui.button("Compile!").clicked()
         };
 
-        if should_compile || !sound.is_playing() {
-            editor.error_text = match sound.set(&editor.src) {
-                Ok(()) => "Compilation succesful!".into(),
+        if should_compile {
+            editor.error_text = match compile(&editor.src) {
+                Ok(sound_fn) => {
+                    sound.push(sound_fn);
+                    "Compilation succesful!".into()
+                },
                 Err(e) => e.to_string(),
             };
 

@@ -81,17 +81,44 @@ fn register_fns(engine: &mut Engine) {
     engine.register_fn("ln", |n: f32| n.ln());
     engine.register_fn("log", |n: f32, b: f32| n.log(b));
     engine.register_fn("euc", |steps: f32, pulses: f32, t: f32| {
+        let tmod = t % 1.0;
         let index = (steps * (t % 1.0)) as usize;
-        if cached_bjorklund(steps as usize, pulses as usize, index) {
+        let gate = if cached_bjorklund(steps as usize, pulses as usize, index) {
             1.0_f32
         } else {
             0.0_f32
-        }
+        };
+        gate * tmod
     });
     engine.register_fn("frc", |f: f32| f.fract());
     engine.register_fn("flr", |f: f32| f.floor());
     engine.register_fn("cei", |f: f32| f.ceil());
-    // engine.register_fn("env", |a:f32, d:f32, s:f32, r:f32| )
+    engine.register_fn("env", |a: f32, d: f32, s: f32, r: f32, t: f32| {
+        // asdr-like, we don't really have the concept of hold
+        // attack time, decay time, sustain level, release time
+        // todo_major see if we can speed this up
+
+        // attack?
+        if t <= a {
+            t / a
+        } else {
+            // decay?
+            let t_minus_a = t - a;
+            if t_minus_a <= d {
+                1.0 * t_minus_a + (d - t_minus_a) * s
+            } else {
+                // sustain?
+                let one_minus_t = 1.0 - t;
+                if one_minus_t >= r {
+                    s
+                }
+                // release?
+                else {
+                    one_minus_t / r * s
+                }
+            }
+        }
+    });
     engine.register_fn("lrp", |a: f32, b: f32, t: f32| (1.0 - t) * a + t * b);
     engine.register_fn("rfl", |f: f32| (-1.0 + (f % 2.0)).abs());
     engine.register_fn("saw", |f: f32| 2.0 * (f - (0.5 + f).floor()));

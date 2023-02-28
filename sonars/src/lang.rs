@@ -97,7 +97,7 @@ fn register_fns(engine: &mut Engine) {
         } else {
             0.0_f32
         };
-        gate * tmod
+        gate * ((tmod * steps) % 1.0)
     });
     engine.register_fn("frc", |f: f32| f.fract());
     engine.register_fn("flr", |f: f32| f.floor());

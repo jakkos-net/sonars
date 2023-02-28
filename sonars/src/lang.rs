@@ -81,6 +81,15 @@ fn register_fns(engine: &mut Engine) {
     engine.register_fn("ln", |n: f32| n.ln());
     engine.register_fn("log", |n: f32, b: f32| n.log(b));
     engine.register_fn("euc", |steps: f32, pulses: f32, t: f32| {
+        // euclidean-rhythm-like
+        // given steps and pulses, return the pattern
+        // select the current step based on t, where we cycle the full steps every 1s
+        // if the step is "on", return the progress through the step
+        // otherwise return 0.0
+        // e.g. rhythm 10 steps, 3 pulses -> pattern [on, off, off, on, off, off, on, off, off ,off]
+        //      if t = 0.37, we are in the fourth step (step 1 is 0 to 0.1, 2 is 0.1 to 0.2...)
+        //      step 4 is on, so we return 0.7, as we are 70% through the step
+        //      if t = 0.51, we are in the sixth step, which is off, so we return 0.0
         let tmod = t % 1.0;
         let index = (steps * (t % 1.0)) as usize;
         let gate = if cached_bjorklund(steps as usize, pulses as usize, index) {

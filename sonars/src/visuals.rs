@@ -1,7 +1,24 @@
-use bevy_egui::egui::{emath, epaint, vec2, Color32, Frame, Pos2, Rect, Stroke, Ui};
+use bevy::prelude::{Plugin, ResMut};
+use bevy_egui::{
+    egui::{self, emath, epaint, vec2, Color32, Frame, Pos2, Rect, Stroke, Ui},
+    EguiContext,
+};
 
-pub fn test_visuals(ui: &mut Ui) {
+pub struct VisualsPlugin;
+
+impl Plugin for VisualsPlugin {
+    fn build(&self, app: &mut bevy::prelude::App) {
+        app.add_system(visuals);
+    }
+}
+
+fn visuals(mut egui_context: ResMut<EguiContext>) {
+    egui::TopBottomPanel::top("background").show(egui_context.ctx_mut(), |ui| inner_visuals(ui));
+}
+
+pub fn inner_visuals(ui: &mut Ui) {
     // adapted from the egui.rs dancing strings demo
+
     Frame::canvas(ui.style()).show(ui, |ui| {
         ui.ctx().request_repaint();
         let time = ui.input().time;

@@ -1,7 +1,4 @@
-use bevy::{
-    prelude::{NonSendMut, Plugin, Res, ResMut, Resource},
-    time::Time,
-};
+use bevy::prelude::{NonSendMut, Plugin, ResMut, Resource};
 
 use crossbeam_queue::SegQueue;
 #[cfg(not(target_arch = "wasm32"))]
@@ -34,7 +31,6 @@ impl Plugin for SoundPlugin {
 fn update_sound(
     mut sound_control: ResMut<SoundControl>,
     mut sound_resources: NonSendMut<SoundResources>,
-    time: Res<Time>,
 ) {
     sound_resources.update(&sound_control.next_fn).unwrap();
     sound_control.update();

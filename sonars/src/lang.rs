@@ -42,11 +42,22 @@ impl Program {
         }
     }
 
-    fn to_fn() -> anyhow::Result<SoundFn> {
-        todo!()
+    fn to_fn(&self) -> anyhow::Result<SoundFn> {
+        let ast = self.to_rhai()?;
+        let mut engine = Engine::new();
+        engine.set_optimization_level(rhai::OptimizationLevel::Full);
+        register_fns(&mut engine);
+        let inner_fn = Func::<(f32,), f32>::create_from_ast(engine, ast, "main");
+        if let Err(e) = inner_fn(1.0) {
+            bail!("source code does not evalulate to a number!\n{e}")
+        }
+        let sound_fn = Box::new(move |f| (inner_fn)(f).unwrap().clamp(-1.0, 1.0));
+        Ok(sound_fn)
     }
 
-    fn to_rhai() {}
+    fn to_rhai(&self) -> anyhow::Result<rhai::AST>{
+        todo!()
+    }
 }
 
 // temp, just compile rhai language

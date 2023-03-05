@@ -13,18 +13,16 @@ impl Plugin for VisualsPlugin {
 }
 
 fn visuals(mut egui_context: ResMut<EguiContext>) {
-    egui::TopBottomPanel::top("background").show(egui_context.ctx_mut(), |ui| inner_visuals(ui));
+    egui::CentralPanel::default()
+    .show(egui_context.ctx_mut(), |ui| inner_visuals(ui));
 }
 
 pub fn inner_visuals(ui: &mut Ui) {
     // adapted from the egui.rs dancing strings demo
-
-    Frame::canvas(ui.style()).show(ui, |ui| {
         ui.ctx().request_repaint();
         let time = ui.input().time;
 
-        let desired_size = ui.available_width() * vec2(1.0, 0.35);
-        let (_id, rect) = ui.allocate_space(desired_size);
+        let (_id, rect) = ui.allocate_space(ui.available_size());
 
         let to_screen =
             emath::RectTransform::from_to(Rect::from_x_y_ranges(0.0..=1.0, -1.0..=1.0), rect);
@@ -46,5 +44,4 @@ pub fn inner_visuals(ui: &mut Ui) {
         let color = Color32::from_additive_luminance(255);
         ui.painter()
             .add(epaint::Shape::line(points, Stroke::new(thickness, color)));
-    });
 }

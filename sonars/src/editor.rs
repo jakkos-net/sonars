@@ -3,7 +3,7 @@ use bevy::{
     time::{Stopwatch, Time},
 };
 use bevy_egui::{
-    egui::{self, CollapsingHeader, DragValue, TextEdit},
+    egui::{self, CollapsingHeader, DragValue, TextEdit, Slider},
     EguiContext,
 };
 
@@ -25,6 +25,7 @@ struct CodeEditorData {
     pub waiting_to_compile: bool,
     pub auto_compile_delay: f32,
     pub auto_compile: bool,
+    pub volume: f32,
 }
 
 impl Default for CodeEditorData {
@@ -36,6 +37,7 @@ impl Default for CodeEditorData {
             waiting_to_compile: false,
             auto_compile_delay: 0.5,
             auto_compile: true,
+            volume: 1.0,
         }
     }
 }
@@ -93,6 +95,11 @@ fn coding_ui(
         }
 
         ui.label(&editor.error_text);
+        ui.horizontal(|ui|{
+            ui.label("volume:");
+            ui.add(Slider::new(&mut editor.volume, 0.0..=1.0));
+        });
+        
 
         CollapsingHeader::new("Notes").default_open(true).show(ui,|ui|{
             ui.label("t is the current time in seconds");

@@ -3,7 +3,7 @@ use bevy::{
     time::{Stopwatch, Time},
 };
 use bevy_egui::{
-    egui::{self, CollapsingHeader, DragValue, TextEdit, Slider},
+    egui::{self, CollapsingHeader, DragValue, Slider, TextEdit},
     EguiContext,
 };
 
@@ -48,7 +48,7 @@ fn coding_ui(
     sound: NonSendMut<SoundControl>,
     time: Res<Time>,
 ) {
-    egui::Window::new("Editor").show(egui_context.ctx_mut(), |ui| {
+    egui::SidePanel::new(egui::panel::Side::Left, "Editor").resizable(true).default_width(400.0).show(egui_context.ctx_mut(), |ui|{
         let text_edit = ui.add(TextEdit::multiline(&mut editor.src).code_editor().desired_rows(20).desired_width(600.0));
         editor.last_edit.tick(time.delta());
 
@@ -99,7 +99,6 @@ fn coding_ui(
             ui.label("volume:");
             ui.add(Slider::new(&mut editor.volume, 0.0..=1.0));
         });
-        
 
         CollapsingHeader::new("Notes").default_open(true).show(ui,|ui|{
             ui.label("t is the current time in seconds");

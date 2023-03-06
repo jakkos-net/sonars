@@ -15,7 +15,7 @@ fn main() {
         .add_plugins(DefaultPlugins)
         .add_plugin(EguiPlugin)
         .add_plugin(SoundPlugin)
-        .add_plugin(VisualsPlugin)
         .add_plugin(EditorPlugin)
+        .add_plugin(VisualsPlugin)
         .run();
 }

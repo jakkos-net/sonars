@@ -55,7 +55,7 @@ impl Program {
         Ok(sound_fn)
     }
 
-    fn to_rhai(&self) -> anyhow::Result<rhai::AST>{
+    fn to_rhai(&self) -> anyhow::Result<rhai::AST> {
         todo!()
     }
 }

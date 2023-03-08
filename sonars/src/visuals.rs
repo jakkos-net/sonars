@@ -1,9 +1,9 @@
 use std::collections::VecDeque;
 
-use bevy::prelude::{Plugin, Res, ResMut, Resource, Schedule};
+use bevy::prelude::{Plugin, Res, ResMut, Resource};
 use bevy_egui::{
-    egui::{self, emath, epaint, vec2, Color32, Frame, Pos2, Rect, Stroke, Ui},
-    EguiContext, EguiContexts,
+    egui::{self, emath, epaint, Color32, Pos2, Rect, Stroke, Ui},
+    EguiContexts,
 };
 
 use crate::sound::{SoundControl, SoundFn};

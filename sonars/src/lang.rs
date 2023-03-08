@@ -17,7 +17,7 @@ struct Program {
 
 impl Program {
     fn from_source(src: &str) -> anyhow::Result<Self> {
-        let parts = src.split_ascii_whitespace();
+        let _parts = src.split_ascii_whitespace();
 
         todo!();
     }
@@ -26,7 +26,7 @@ impl Program {
         match parts.next() {
             Some(part) => match part {
                 "(" => {
-                    let elems = parts.take_while(|part| *part != ")");
+                    let _elems = parts.take_while(|part| *part != ")");
                     // let closing = parts.next();
                 }
                 ")" => (),

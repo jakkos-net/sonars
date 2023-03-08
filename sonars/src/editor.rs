@@ -7,7 +7,7 @@ use bevy_egui::{
     EguiContext,
 };
 
-use crate::{lang::compile, sound::SoundControl};
+use crate::{lang::compile, sound::SoundControl, visuals::VisualsControls};
 
 pub struct EditorPlugin;
 
@@ -45,6 +45,7 @@ impl Default for CodeEditorData {
 fn coding_ui(
     mut egui_context: ResMut<EguiContext>,
     mut editor: ResMut<CodeEditorData>,
+    mut visual_controls: ResMut<VisualsControls>,
     sound: NonSendMut<SoundControl>,
     time: Res<Time>,
 ) {
@@ -98,6 +99,24 @@ fn coding_ui(
         ui.horizontal(|ui|{
             ui.label("volume:");
             ui.add(Slider::new(&mut editor.volume, 0.0..=1.0));
+        });
+        CollapsingHeader::new("Visuals").default_open(false).show(ui, |ui|{
+            ui.horizontal(|ui|{
+                ui.label("time scale:");
+                ui.add(Slider::new(&mut visual_controls.time_scale, 0.0..=1.0))
+            });
+            ui.horizontal(|ui|{
+                ui.label("height:");
+                ui.add(Slider::new(&mut visual_controls.height, 0.0..=1.0))
+            });
+            ui.horizontal(|ui|{
+                ui.label("fade off:");
+                ui.add(Slider::new(&mut visual_controls.fade_off, 0.0..=100.0))
+            });
+            ui.horizontal(|ui|{
+                ui.label("thickness:");
+                ui.add(Slider::new(&mut visual_controls.thickness, 0.0..=10.0))
+            });
         });
 
         CollapsingHeader::new("Notes").default_open(true).show(ui,|ui|{

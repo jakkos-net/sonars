@@ -61,6 +61,10 @@ impl SoundControl {
             self.next_fn = self.queue.pop().unwrap();
         }
     }
+
+    pub fn current(&self) -> &SoundFn {
+        &self.next_fn
+    }
 }
 
 struct SoundResources {

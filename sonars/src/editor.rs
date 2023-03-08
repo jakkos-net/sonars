@@ -1,5 +1,5 @@
 use bevy::{
-    prelude::{NonSendMut, Plugin, Res, ResMut, Resource},
+    prelude::{Plugin, Res, ResMut, Resource},
     time::{Stopwatch, Time},
 };
 use bevy_egui::{

@@ -113,7 +113,7 @@ pub fn inner_visuals(
             .enumerate()
             .map(|(i, y)| {
                 let t = i as f32 / (n as f32);
-                to_screen * bevy_egui::egui::pos2(t as f32, *y)
+                to_screen * bevy_egui::egui::pos2(t, *y)
             })
             .collect();
 

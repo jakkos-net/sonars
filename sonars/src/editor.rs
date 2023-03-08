@@ -4,7 +4,7 @@ use bevy::{
 };
 use bevy_egui::{
     egui::{self, CollapsingHeader, DragValue, Slider, TextEdit},
-    EguiContext,
+    EguiContexts,
 };
 
 use crate::{lang::compile, sound::SoundControl, visuals::VisualsControls};
@@ -43,10 +43,10 @@ impl Default for CodeEditorData {
 }
 
 fn coding_ui(
-    mut egui_context: ResMut<EguiContext>,
+    mut egui_context: EguiContexts,
     mut editor: ResMut<CodeEditorData>,
     mut visual_controls: ResMut<VisualsControls>,
-    sound: NonSendMut<SoundControl>,
+    sound: Res<SoundControl>,
     time: Res<Time>,
 ) {
     egui::SidePanel::new(egui::panel::Side::Left, "Editor").resizable(true).default_width(400.0).show(egui_context.ctx_mut(), |ui|{

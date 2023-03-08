@@ -42,7 +42,7 @@ impl Program {
         }
     }
 
-    fn to_fn(&self) -> anyhow::Result<SoundFn> {
+    pub fn to_fn(&self) -> anyhow::Result<SoundFn> {
         let ast = self.to_rhai()?;
         let mut engine = Engine::new();
         engine.set_optimization_level(rhai::OptimizationLevel::Full);

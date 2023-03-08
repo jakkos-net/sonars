@@ -3,7 +3,7 @@ use std::collections::VecDeque;
 use bevy::prelude::{Plugin, Res, ResMut, Resource, Schedule};
 use bevy_egui::{
     egui::{self, emath, epaint, vec2, Color32, Frame, Pos2, Rect, Stroke, Ui},
-    EguiContext,
+    EguiContext, EguiContexts,
 };
 
 use crate::sound::{SoundControl, SoundFn};
@@ -55,7 +55,7 @@ impl Default for VisualData {
 }
 
 fn visuals(
-    mut egui_context: ResMut<EguiContext>,
+    mut egui_context: EguiContexts,
     mut data: ResMut<VisualData>,
     controls: Res<VisualsControls>,
     sound_control: Res<SoundControl>,
@@ -78,7 +78,7 @@ pub fn inner_visuals(
 ) {
     // adapted from the egui.rs dancing strings demo
     ui.ctx().request_repaint();
-    let time = ui.input().time as f32;
+    let time = ui.input(|input| input.time) as f32;
 
     let (_id, rect) = ui.allocate_space(ui.available_size());
 

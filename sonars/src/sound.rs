@@ -187,3 +187,22 @@ impl SoundResources {
         Ok(())
     }
 }
+
+
+// https://github.com/reprimande/wasm-audioworklet-synth/
+
+
+#[no_mangle]
+pub extern "C" fn alloc(size: usize) -> *mut f32 {
+    let mut buf = Vec::<f32>::with_capacity(size);
+    let ptr = buf.as_mut_ptr();
+    std::mem::forget(buf);
+    ptr as *mut f32
+}
+
+
+#[no_mangle]
+pub extern "C" fn process(out_ptr: *mut f32, size: usize) {
+    // let mut synth = SYNTH.lock().unwrap();
+    // synth.process(out_ptr, size);
+}

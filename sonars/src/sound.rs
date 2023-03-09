@@ -1,6 +1,10 @@
+use std::sync::Mutex;
+
 use bevy::prelude::{NonSendMut, Plugin, ResMut, Resource};
 
 use crossbeam_queue::SegQueue;
+use once_cell::sync::Lazy;
+use web_audio_api::{render::{AudioRenderQuantum, RenderScope, AudioParamValues, AudioProcessor}, node::ChannelConfig, context::AudioContextRegistration};
 #[cfg(not(target_arch = "wasm32"))]
 use web_audio_api::{
     context::{AudioContext, AudioContextOptions, BaseAudioContext},
@@ -17,6 +21,7 @@ const BUFFER_SIZE: u32 = SAMPLE_RATE / BUFFER_INV_TIME_LENGTH;
 const BUFFER_TIME_LENGTH: f64 = 1.0;
 
 pub struct SoundPlugin;
+
 
 pub type SoundFn = Box<dyn Fn(f32) -> f32 + Send + Sync>;
 
@@ -67,6 +72,10 @@ impl SoundControl {
     }
 }
 
+pub fn push_sound(new_fn: SoundFn){
+    *CURRENT_SOUND_FN.lock().unwrap() = new_fn;
+}
+
 struct SoundResources {
     pub ctx: AudioContext,
     pub gain: GainNode,
@@ -91,6 +100,8 @@ impl Default for SoundResources {
                     sink_id: "".into(),
                     render_size_hint: web_audio_api::context::AudioContextRenderSizeCategory::Default,
                 });
+
+                setup_desktop_worklet(&ctx);
 
                 let gain = ctx.create_gain();
                 gain.connect(&ctx.destination());
@@ -129,7 +140,7 @@ impl SoundResources {
 
                     if self.buf.is_some() {
                         let old_buf = self.buf.take().unwrap();
-                        old_buf.stop().ok();
+                        // old_buf.stop().ok();
                         old_buf.disconnect().ok();
                         drop(old_buf);
                     }
@@ -143,7 +154,7 @@ impl SoundResources {
                     // if we were playing sound before, stop
                     if self.buf.is_some() {
                         let old_buf = self.buf.take().unwrap();
-                        old_buf.stop();
+                        // old_buf.stop();
                         old_buf.disconnect();
                         drop(old_buf);
                     }
@@ -175,7 +186,7 @@ impl SoundResources {
                     // put the buffer in the buffer node
                     new_buf.set_buffer(buf_data);
 
-                    new_buf.start_at(next_t);
+                    // new_buf.start_at(next_t);
 
 
                     // move the now playing buffer into buf, and the for-next-time buffer into next_buf
@@ -189,20 +200,83 @@ impl SoundResources {
 }
 
 
-// https://github.com/reprimande/wasm-audioworklet-synth/
+// desktop worklet
 
+static CURRENT_SOUND_FN: Lazy<Mutex<SoundFn>> = Lazy::new(|| {
+    Mutex::new(Box::new(|_| 0.0))
+});
 
-#[no_mangle]
-pub extern "C" fn alloc(size: usize) -> *mut f32 {
-    let mut buf = Vec::<f32>::with_capacity(size);
-    let ptr = buf.as_mut_ptr();
-    std::mem::forget(buf);
-    ptr as *mut f32
+fn setup_desktop_worklet(context: &AudioContext){
+    let noise = MyNode::new(context);
+    noise.connect(&context.destination());
 }
 
+struct MyNode {
+    registration: AudioContextRegistration,
+    channel_config: ChannelConfig,
+}
 
-#[no_mangle]
-pub extern "C" fn process(out_ptr: *mut f32, size: usize) {
-    // let mut synth = SYNTH.lock().unwrap();
-    // synth.process(out_ptr, size);
+// implement required methods for AudioNode trait
+impl AudioNode for MyNode {
+    fn registration(&self) -> &AudioContextRegistration {
+        &self.registration
+    }
+
+    fn channel_config(&self) -> &ChannelConfig {
+        &self.channel_config
+    }
+
+    fn number_of_inputs(&self) -> usize {
+        0
+    }
+
+    fn number_of_outputs(&self) -> usize {
+        1
+    }
+}
+
+impl MyNode {
+    fn new<C: BaseAudioContext>(context: &C) -> Self {
+        context.register(move |registration| {
+
+            let render = MyProcessor::default();
+
+            let node = MyNode {
+                registration,
+                channel_config: ChannelConfig::default(),
+            };
+
+            (node, Box::new(render))
+        })
+    }
+}
+
+#[derive(Default)]
+struct MyProcessor{
+    sample_idx: u64,
+}
+
+impl AudioProcessor for MyProcessor {
+    fn process(
+        &mut self,
+        _inputs: &[AudioRenderQuantum],
+        outputs: &mut [AudioRenderQuantum],
+        params: AudioParamValues,
+        _scope: &RenderScope,
+    ) -> bool {
+        let output = &mut outputs[0];
+        output.set_number_of_channels(1);
+        self.sample_idx += 128;
+        let sound_fn_guard = CURRENT_SOUND_FN.lock().unwrap();
+        let sound_fn = sound_fn_guard.as_ref();
+        output.channels_mut().iter_mut().for_each(|buf| {
+            buf.iter_mut()
+            .enumerate()
+                .for_each(|(i,output_sample)| {
+                    *output_sample = sound_fn(((self.sample_idx + i as u64) as f32 * INV_SAMPLE_RATE));
+                })
+        });
+
+        true 
+    }
 }

@@ -7,7 +7,7 @@ use bevy_egui::{
     EguiContexts,
 };
 
-use crate::{lang::compile, sound::SoundControl, visuals::VisualsControls};
+use crate::{lang::compile, sound::{SoundControl, push_sound}, visuals::VisualsControls};
 
 pub struct EditorPlugin;
 
@@ -76,6 +76,7 @@ fn coding_ui(
             editor.error_text = match compile(&editor.src) {
                 Ok(sound_fn) => {
                     sound.push(sound_fn);
+                    push_sound(compile(&editor.src).unwrap());
                     "Compilation succesful!".into()
                 },
                 Err(e) => e.to_string(),

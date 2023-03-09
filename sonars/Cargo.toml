@@ -13,10 +13,12 @@ crossbeam-queue = "0.3.8"
 once_cell = "1.17.1"
 rhai = { version = "1.12.0", features = ["f32_float", "sync"] }
 thiserror = "1.0.39"
-wasm-bindgen = "0.2.84"
+
 [target.'cfg(not(target_arch = "wasm32"))'.dependencies]
 web-audio-api = { version = "0.28.0", default-features = false, features = ["cpal"] }
+
 [target.'cfg(target_arch = "wasm32")'.dependencies]
+wasm-bindgen = "0.2.84"
 web-sys = { version = "0.3.61", features = [  
     'AudioContext',
     'AudioDestinationNode',

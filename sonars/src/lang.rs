@@ -68,6 +68,8 @@ pub fn compile(src: &str) -> anyhow::Result<SoundFn> {
 
     let script = format!(
         "
+        {RHAI_FUNCTIONS}
+        
             fn main (t) {{
                 {src}
             }}

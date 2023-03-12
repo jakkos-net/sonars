@@ -145,22 +145,30 @@ fn register_fns(engine: &mut Engine) {
     engine.register_fn("rfl", |f: f32| (-1.0 + (f % 2.0)).abs());
     engine.register_fn("saw", |f: f32| 2.0 * (f - (0.5 + f).floor()));
     engine.register_fn("sqw", |f: f32| (1.0 - (f % 2.0).floor()));
+    engine.register_fn("sat", |f: f32| f.clamp(0.0, 1.0));
+    engine.register_fn("clm", |f: f32, min: f32, max: f32| f.clamp(min, max));
+    engine.register_fn("max", |a: f32, b: f32| a.max(b));
+    engine.register_fn("min", |a: f32, b: f32| a.min(b));
 }
 
-const RHAI_FUNCTIONS:&str = include_str!("./functions.rhai");
-
+const RHAI_FUNCTIONS: &str = include_str!("./functions.rhai");
 
 #[cfg(test)]
-mod tests{
+mod tests {
     use rhai::{Engine, Scope};
 
     use super::RHAI_FUNCTIONS;
 
     #[test]
-    fn test_rhai_function_loading(){
+    fn test_rhai_function_loading() {
         let mut engine = Engine::new();
         let ast = engine.compile(RHAI_FUNCTIONS).unwrap();
         assert!(ast.has_functions());
-        assert_eq!(engine.call_fn::<f32>(&mut Scope::new(), &ast, "test_func", ()).unwrap(), 1.0);
+        assert_eq!(
+            engine
+                .call_fn::<f32>(&mut Scope::new(), &ast, "test_func", ())
+                .unwrap(),
+            1.0
+        );
     }
 }

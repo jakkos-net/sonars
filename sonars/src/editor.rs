@@ -24,20 +24,18 @@ struct CodeEditorData {
     pub last_edit: Stopwatch,
     pub waiting_to_compile: bool,
     pub auto_compile_delay: f32,
-    pub auto_compile: bool,
-    pub volume: f32,
+    pub auto_compile: bool
 }
 
 impl Default for CodeEditorData {
     fn default() -> Self {
         Self {
-            src: "sin(330.0*t) * sin(33.0*t) * euc(7., 3., t)".into(),
+            src: "let signal = sin(330.0*t) * sin(33.0*t) * euc(7., 3., t);\n\nlet volume = 0.5;\n\nsignal*volume".into(),
             error_text: "".into(),
             last_edit: Stopwatch::new(),
             waiting_to_compile: false,
             auto_compile_delay: 0.5,
             auto_compile: true,
-            volume: 1.0,
         }
     }
 }
@@ -97,10 +95,6 @@ fn coding_ui(
         }
 
         ui.label(&editor.error_text);
-        ui.horizontal(|ui|{
-            ui.label("volume:");
-            ui.add(Slider::new(&mut editor.volume, 0.0..=1.0));
-        });
         CollapsingHeader::new("Visuals").default_open(false).show(ui, |ui|{
             ui.horizontal(|ui|{
                 ui.label("time scale:");

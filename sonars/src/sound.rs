@@ -1,3 +1,6 @@
+pub mod native;
+pub mod wasm;
+
 use std::sync::Mutex;
 
 use bevy::prelude::{NonSendMut, Plugin, ResMut, Resource};

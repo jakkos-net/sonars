@@ -1,3 +1,7 @@
+pub struct SoundResources {
+    ctx: AudioContext,
+}
+
 // https://github.com/rustwasm/wasm-bindgen/blob/main/examples/wasm-audio-worklet/src/wasm_audio.rs
 
 use crate::dependent_module;

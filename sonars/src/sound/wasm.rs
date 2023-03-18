@@ -2,6 +2,18 @@ pub struct SoundResources {
     ctx: AudioContext,
 }
 
+impl Default for SoundResources {
+    fn default() -> Self {
+        let ctx = wasm_audio().unwrap();
+        let time_start = ctx.current_time();
+        Self {
+            ctx,
+            time_start: time_start,
+        }
+    }
+}
+
+
 // https://github.com/rustwasm/wasm-bindgen/blob/main/examples/wasm-audio-worklet/src/wasm_audio.rs
 
 use crate::dependent_module;

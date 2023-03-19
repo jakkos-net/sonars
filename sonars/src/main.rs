@@ -11,6 +11,9 @@ use sound::SoundPlugin;
 use visuals::VisualsPlugin;
 
 fn main() {
+    #[cfg(target_arch = "wasm32")]
+    console_error_panic_hook::set_once();
+
     App::new()
         .add_plugins(DefaultPlugins)
         .add_plugin(EguiPlugin)

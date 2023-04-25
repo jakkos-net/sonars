@@ -119,15 +119,18 @@ fn register_fns(engine: &mut Engine) {
         // asdr-like, we don't really have the concept of hold
         // attack time, decay time, sustain level, release time
         // todo_major see if we can speed this up
-
-        // attack?
+        // todo_maybe do we want to add a check for a + d + r being greater than 1.0?
+        // attack: over time span a, we linearly increase from 0 upto 1
         if t <= a {
             t / a
         } else {
-            // decay?
-            let t_minus_a = t - a;
-            if t_minus_a <= d {
-                1.0 * t_minus_a + (d - t_minus_a) * s
+            // decay: once we are past time a, but still before a+d, we linearly decrease from 1.0 to s over a period of d
+            if t <= d + a {
+                // lerp: start * (1-k) + end * k
+                // where k is the proportion of time we are through the interval
+                // k goes from a to a+d
+                let k = (t - a) / (a + d);
+                1.0 * (1.0 - k) + k * s
             } else {
                 // sustain?
                 let one_minus_t = 1.0 - t;

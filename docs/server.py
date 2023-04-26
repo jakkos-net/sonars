@@ -1,4 +1,7 @@
 #!/usr/bin/env python3
+
+# Taken from the wasm_bindgen audio worklet example: https://github.com/rustwasm/wasm-bindgen/tree/c5b073ae58cb3b6d44252108ea9862bf0d04f3b6/examples/wasm-audio-worklet
+
 from http.server import HTTPServer, SimpleHTTPRequestHandler, test
 import sys
 

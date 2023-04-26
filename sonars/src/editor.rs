@@ -1,5 +1,5 @@
 use bevy::{
-    prelude::{Plugin, Res, ResMut, Resource},
+    prelude::{Commands, EventWriter, Plugin, Res, ResMut, Resource},
     time::{Stopwatch, Time},
 };
 use bevy_egui::{
@@ -7,7 +7,11 @@ use bevy_egui::{
     EguiContexts,
 };
 
-use crate::{lang::compile, sound::{SoundControl, push_sound}, visuals::VisualsControls};
+use crate::{
+    lang::compile,
+    sound::{push_sound, SoundControl, SoundStartEvent},
+    visuals::VisualsControls,
+};
 
 pub struct EditorPlugin;
 
@@ -24,7 +28,7 @@ struct CodeEditorData {
     pub last_edit: Stopwatch,
     pub waiting_to_compile: bool,
     pub auto_compile_delay: f32,
-    pub auto_compile: bool
+    pub auto_compile: bool,
 }
 
 impl Default for CodeEditorData {
@@ -44,10 +48,16 @@ fn coding_ui(
     mut egui_context: EguiContexts,
     mut editor: ResMut<CodeEditorData>,
     mut visual_controls: ResMut<VisualsControls>,
+    mut sound_start_ev_writer: EventWriter<SoundStartEvent>,
     sound: Res<SoundControl>,
     time: Res<Time>,
 ) {
     egui::SidePanel::new(egui::panel::Side::Left, "Editor").resizable(true).default_width(400.0).show(egui_context.ctx_mut(), |ui|{
+
+        if ui.button("Start").clicked(){
+            sound_start_ev_writer.send(SoundStartEvent);
+        };
+
         let text_edit = ui.add(TextEdit::multiline(&mut editor.src).code_editor().desired_rows(20).desired_width(600.0));
         editor.last_edit.tick(time.delta());
 

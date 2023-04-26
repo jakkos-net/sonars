@@ -1,4 +1,7 @@
-use bevy::prelude::{Plugin, ResMut, Resource};
+use bevy::{
+    ecs::system::SystemState,
+    prelude::{EventReader, Plugin, ResMut, Resource, World},
+};
 use std::sync::Mutex;
 
 use crossbeam_queue::SegQueue;
@@ -24,13 +27,26 @@ pub type SoundFn = Box<dyn Fn(f32) -> f32 + Send + Sync>;
 impl Plugin for SoundPlugin {
     fn build(&self, app: &mut bevy::prelude::App) {
         app.init_resource::<SoundControl>();
-        app.init_non_send_resource::<SoundResources>();
+        app.add_event::<SoundStartEvent>();
         app.add_system(update_sound);
+        app.add_system(start_sound);
     }
 }
 
+#[derive(Clone)]
+pub struct SoundStartEvent;
+
 fn update_sound(mut sound_control: ResMut<SoundControl>) {
     sound_control.update();
+}
+
+fn start_sound(world: &mut World) {
+    let mut events_state = SystemState::<EventReader<SoundStartEvent>>::new(world);
+    let mut events = events_state.get_mut(world);
+    let events: Vec<SoundStartEvent> = events.iter().cloned().collect(); // need to collect and clone to get rid of reference to world
+    for _ in events.into_iter() {
+        world.init_non_send_resource::<SoundResources>();
+    }
 }
 
 #[derive(Resource)]

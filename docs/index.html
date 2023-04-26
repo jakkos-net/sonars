@@ -1,13 +1,24 @@
 <!DOCTYPE html>
 <html>
-  <head>
-    <meta charset="utf-8">
-    <title>sonars</title>
-  </head>
-  <body>
-    <script type="module">
-        import init from './sonars.js'
-        init()
-      </script>
-  </body>
+
+<head>
+  <meta charset="utf-8">
+  <title>sonars</title>
+</head>
+
+<body>
+  <script>
+  </script>
+  <script type="module">
+    import init, { web_main } from './sonars.js'
+    console.log("Imported!");
+    async function run() {
+      console.log("Started asnyc!")
+      await init();
+      console.log("Finished init!");
+    }
+    run();
+  </script>
+</body>
+
 </html>

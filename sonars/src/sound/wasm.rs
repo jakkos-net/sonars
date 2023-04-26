@@ -11,10 +11,7 @@ impl Default for SoundResources {
 
 fn get_ctx() -> Option<AudioContext> {
     // todo_major: actually return the audio context
-    async fn inner() {
-        web_main().await.unwrap();
-    }
-    spawn_local(inner());
+    spawn_local(web_main());
     None
 }
 
@@ -31,9 +28,8 @@ use web_sys::{AudioContext, AudioWorkletNode, AudioWorkletNodeOptions};
 
 use crate::sound::CURRENT_SOUND_FN;
 
-#[wasm_bindgen]
-pub async fn web_main() -> Result<AudioContext, JsValue> {
-    wasm_audio().await
+async fn web_main() {
+    wasm_audio().await.unwrap();
 }
 
 #[wasm_bindgen]

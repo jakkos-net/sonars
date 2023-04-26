@@ -29,6 +29,7 @@ struct CodeEditorData {
     pub waiting_to_compile: bool,
     pub auto_compile_delay: f32,
     pub auto_compile: bool,
+    pub started: bool,
 }
 
 impl Default for CodeEditorData {
@@ -40,6 +41,7 @@ impl Default for CodeEditorData {
             waiting_to_compile: false,
             auto_compile_delay: 0.5,
             auto_compile: true,
+            started: false,
         }
     }
 }
@@ -52,9 +54,15 @@ fn coding_ui(
     sound: Res<SoundControl>,
     time: Res<Time>,
 ) {
-    egui::SidePanel::new(egui::panel::Side::Left, "Editor").resizable(true).default_width(400.0).show(egui_context.ctx_mut(), |ui|{
-        
-        sound_start_ev_writer.send(SoundStartEvent);
+    let ctx = egui_context.ctx_mut();
+    egui::SidePanel::new(egui::panel::Side::Left, "Editor").resizable(true).default_width(400.0).show(ctx, |ui|{
+
+        if !editor.started&& ctx.input(|i|{
+            i.pointer.any_click()
+        }){
+            sound_start_ev_writer.send(SoundStartEvent);
+            editor.started = true;
+        }
 
         let text_edit = ui.add(TextEdit::multiline(&mut editor.src).code_editor().desired_rows(20).desired_width(600.0));
         editor.last_edit.tick(time.delta());

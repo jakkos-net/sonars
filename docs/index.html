@@ -10,14 +10,8 @@
   <script>
   </script>
   <script type="module">
-    import init, { web_main } from './sonars.js'
-    console.log("Imported!");
-    async function run() {
-      console.log("Started asnyc!")
-      await init();
-      console.log("Finished init!");
-    }
-    run();
+    import init from './sonars.js';
+    init();
   </script>
 </body>
 

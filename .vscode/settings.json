@@ -1,5 +1,5 @@
 {
     "workbench.colorTheme": "Earthsong (rainglow)",
-    // "rust-analyzer.cargo.target": null // code completion for native
-    "rust-analyzer.cargo.target": "wasm32-unknown-unknown", // code compleition for wasm
+    "rust-analyzer.cargo.target": null // code completion for native
+    // "rust-analyzer.cargo.target": "wasm32-unknown-unknown", // code compleition for wasm
 }

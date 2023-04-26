@@ -1,10 +1,6 @@
 /* tslint:disable */
 /* eslint-disable */
 /**
-* @returns {Promise<AudioContext>}
-*/
-export function web_main(): Promise<AudioContext>;
-/**
 */
 export class WasmAudioProcessor {
   free(): void;
@@ -32,7 +28,6 @@ export interface InitOutput {
   readonly wasmaudioprocessor_pack: (a: number) => number;
   readonly wasmaudioprocessor_unpack: (a: number) => number;
   readonly __wbg_wasmaudioprocessor_free: (a: number) => void;
-  readonly web_main: () => number;
   readonly wgpu_compute_pass_set_pipeline: (a: number, b: number) => void;
   readonly wgpu_compute_pass_set_bind_group: (a: number, b: number, c: number, d: number, e: number) => void;
   readonly wgpu_compute_pass_set_push_constant: (a: number, b: number, c: number, d: number) => void;

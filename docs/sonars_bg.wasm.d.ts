@@ -5,7 +5,6 @@ export function wasmaudioprocessor_process(a: number, b: number, c: number, d: n
 export function wasmaudioprocessor_pack(a: number): number;
 export function wasmaudioprocessor_unpack(a: number): number;
 export function __wbg_wasmaudioprocessor_free(a: number): void;
-export function web_main(): number;
 export function wgpu_compute_pass_set_pipeline(a: number, b: number): void;
 export function wgpu_compute_pass_set_bind_group(a: number, b: number, c: number, d: number, e: number): void;
 export function wgpu_compute_pass_set_push_constant(a: number, b: number, c: number, d: number): void;

@@ -85,4 +85,10 @@ pub fn push_sound(new_fn: SoundFn) {
     *CURRENT_SOUND_FN.lock().unwrap() = new_fn;
 }
 
+// todo_major: we can't ever have the WASM audio processor block while trying to get the next sound function, we can't use a mutex
+
+pub fn try_pop_sound() -> Option<SoundFn> {
+    todo!()
+}
+
 static CURRENT_SOUND_FN: Lazy<Mutex<SoundFn>> = Lazy::new(|| Mutex::new(Box::new(|_| 0.0)));

@@ -40,6 +40,7 @@ fn update_sound(mut sound_control: ResMut<SoundControl>) {
     sound_control.update();
 }
 
+// todo_minor: find a better way to start sound
 fn start_sound(world: &mut World) {
     let mut events_state = SystemState::<EventReader<SoundStartEvent>>::new(world);
     let mut events = events_state.get_mut(world);

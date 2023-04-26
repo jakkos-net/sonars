@@ -62,7 +62,7 @@ impl AudioProcessor for MyProcessor {
         &mut self,
         _inputs: &[AudioRenderQuantum],
         outputs: &mut [AudioRenderQuantum],
-        params: AudioParamValues,
+        _params: AudioParamValues,
         _scope: &RenderScope,
     ) -> bool {
         let output = &mut outputs[0];
@@ -72,7 +72,7 @@ impl AudioProcessor for MyProcessor {
         let sound_fn = sound_fn_guard.as_ref();
         output.channels_mut().iter_mut().for_each(|buf| {
             buf.iter_mut().enumerate().for_each(|(i, output_sample)| {
-                *output_sample = sound_fn(((self.sample_idx + i as u64) as f32 * INV_SAMPLE_RATE));
+                *output_sample = sound_fn((self.sample_idx + i as u64) as f32 * INV_SAMPLE_RATE);
             })
         });
 

@@ -164,7 +164,7 @@ mod tests {
 
     #[test]
     fn test_rhai_function_loading() {
-        let mut engine = Engine::new();
+        let engine = Engine::new();
         let ast = engine.compile(RHAI_FUNCTIONS).unwrap();
         assert!(ast.has_functions());
         assert_eq!(

@@ -35,12 +35,6 @@ pub struct WasmAudioProcessor(Box<dyn FnMut(&mut [f32]) -> bool>);
 #[wasm_bindgen]
 impl WasmAudioProcessor {
     pub fn process(&mut self, buf: &mut [f32]) -> bool {
-        // self.sample_idx += SAMPLE_TICK;
-        // let idx = self.sample_idx;
-        // let func = CURRENT_SOUND_FN.lock().unwrap();
-        // for (i, v) in buf.iter_mut().enumerate() {
-        //     *v = func((idx + i) as f32);
-        // }
         self.0(buf)
     }
     pub fn pack(self) -> usize {
@@ -59,16 +53,26 @@ pub async fn wasm_audio() -> Result<AudioContext, JsValue> {
     let ctx = AudioContext::new()?;
     prepare_wasm_audio(&ctx).await?;
 
-    let process = Box::new(|buf: &mut [f32]| {
-        for (i, f) in buf.iter_mut().enumerate() {
-            *f = (((i as f32) / 44_000.0) * 2.0 * 3.141 * 440.0).sin();
-        }
-        true
-    });
+    let process = make_process();
 
     let node = wasm_audio_node(&ctx, process)?;
     node.connect_with_audio_node(&ctx.destination()).unwrap();
     Ok(ctx)
+}
+
+fn make_process() -> Box<dyn FnMut(&mut [f32]) -> bool> {
+    let mut idx: usize = 0;
+
+    Box::new(move |buf: &mut [f32]| {
+        let sound_fn_guard = CURRENT_SOUND_FN.lock().unwrap();
+        let sound_fn = sound_fn_guard.as_ref();
+        for (i, f) in buf.iter_mut().enumerate() {
+            let t = (idx + i) as f32 / SAMPLE_RATE as f32;
+            *f = sound_fn(t);
+        }
+        idx += SAMPLE_TICK;
+        true
+    })
 }
 
 // wasm_audio_node creates an AudioWorkletNode running a wasm audio processor.
@@ -97,6 +101,8 @@ pub async fn prepare_wasm_audio(ctx: &AudioContext) -> Result<(), JsValue> {
 
 // https://github.com/rustwasm/wasm-bindgen/blob/153a6aa9c7a989c1865df7f93b2ddbca1113a175/examples/wasm-audio-worklet/src/dependent_module.rsuse js_sys::{Array, JsString};
 use web_sys::{Blob, BlobPropertyBag, Url};
+
+use super::SAMPLE_RATE;
 
 #[wasm_bindgen]
 extern "C" {

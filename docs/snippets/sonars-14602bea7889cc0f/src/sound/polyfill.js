@@ -1,3 +1,5 @@
+// 
+
 if (!globalThis.TextDecoder) {
     globalThis.TextDecoder = class TextDecoder {
         decode(arg) {

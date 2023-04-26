@@ -1,16 +1,24 @@
-const SAMPLE_TICK: usize = 128;
-
 pub struct SoundResources {
     ctx: Option<AudioContext>,
 }
 
 impl Default for SoundResources {
     fn default() -> Self {
-        spawn_local(web_main());
-        Self { ctx: None }
+        let ctx = get_ctx();
+        Self { ctx }
     }
 }
-// https://github.com/rustwasm/wasm-bindgen/blob/main/examples/wasm-audio-worklet/src/wasm_audio.rs
+
+fn get_ctx() -> Option<AudioContext> {
+    // todo_major: actually return the audio context
+    async fn inner() {
+        web_main().await.unwrap();
+    }
+    spawn_local(inner());
+    None
+}
+
+// editted from the wasm_bindgen audio worklet example: https://github.com/rustwasm/wasm-bindgen/tree/c5b073ae58cb3b6d44252108ea9862bf0d04f3b6/examples/wasm-audio-worklet
 
 use js_sys::Array;
 use js_sys::JsString;
@@ -18,17 +26,16 @@ use wasm_bindgen::prelude::*;
 use wasm_bindgen::JsValue;
 use wasm_bindgen_futures::spawn_local;
 use wasm_bindgen_futures::JsFuture;
+use web_sys::AudioContextOptions;
 use web_sys::{AudioContext, AudioWorkletNode, AudioWorkletNodeOptions};
 
 use crate::sound::CURRENT_SOUND_FN;
 
-// https://github.com/rustwasm/wasm-bindgen/blob/153a6aa9c7a989c1865df7f93b2ddbca1113a175/examples/wasm-audio-worklet/src/lib.rs#L12
 #[wasm_bindgen]
-pub async fn web_main() {
-    wasm_audio().await.unwrap();
+pub async fn web_main() -> Result<AudioContext, JsValue> {
+    wasm_audio().await
 }
 
-//https://github.com/rustwasm/wasm-bindgen/blob/main/examples/wasm-audio-worklet/src/dependent_module.rs
 #[wasm_bindgen]
 pub struct WasmAudioProcessor(Box<dyn FnMut(&mut [f32]) -> bool>);
 
@@ -45,22 +52,18 @@ impl WasmAudioProcessor {
     }
 }
 
-// Use wasm_audio if you have a single wasm audio processor in your application
-// whose samples should be played directly. Ideally, call wasm_audio based on
-// user interaction. Otherwise, resume the context on user interaction, so
-// playback starts reliably on all browsers.
 pub async fn wasm_audio() -> Result<AudioContext, JsValue> {
-    let ctx = AudioContext::new()?;
+    let mut options = AudioContextOptions::new();
+    options.sample_rate(SAMPLE_RATE as f32);
+    let ctx = AudioContext::new_with_context_options(&options)?;
     prepare_wasm_audio(&ctx).await?;
-
-    let process = make_process();
-
+    let process = make_process_function();
     let node = wasm_audio_node(&ctx, process)?;
     node.connect_with_audio_node(&ctx.destination()).unwrap();
     Ok(ctx)
 }
 
-fn make_process() -> Box<dyn FnMut(&mut [f32]) -> bool> {
+fn make_process_function() -> Box<dyn FnMut(&mut [f32]) -> bool> {
     let mut idx: usize = 0;
 
     Box::new(move |buf: &mut [f32]| {
@@ -70,14 +73,11 @@ fn make_process() -> Box<dyn FnMut(&mut [f32]) -> bool> {
             let t = (idx + i) as f32 / SAMPLE_RATE as f32;
             *f = sound_fn(t);
         }
-        idx += SAMPLE_TICK;
+        idx += buf.len();
         true
     })
 }
 
-// wasm_audio_node creates an AudioWorkletNode running a wasm audio processor.
-// Remember to call prepare_wasm_audio once on your context before calling
-// this function.
 pub fn wasm_audio_node(
     ctx: &AudioContext,
     process: Box<dyn FnMut(&mut [f32]) -> bool>,
@@ -99,7 +99,6 @@ pub async fn prepare_wasm_audio(ctx: &AudioContext) -> Result<(), JsValue> {
     Ok(())
 }
 
-// https://github.com/rustwasm/wasm-bindgen/blob/153a6aa9c7a989c1865df7f93b2ddbca1113a175/examples/wasm-audio-worklet/src/dependent_module.rsuse js_sys::{Array, JsString};
 use web_sys::{Blob, BlobPropertyBag, Url};
 
 use super::SAMPLE_RATE;
@@ -117,8 +116,6 @@ extern "C" {
 }
 
 pub fn on_the_fly(code: &str) -> Result<String, JsValue> {
-    // Generate the import of the bindgen ES module, assuming `--target web`,
-    // preluded by the TextEncoder/TextDecoder polyfill needed inside worklets.
     let header = format!(
         "import '{}';\n\
         import init, * as bindgen from '{}';\n\n",

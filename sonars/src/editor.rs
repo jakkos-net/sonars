@@ -53,10 +53,8 @@ fn coding_ui(
     time: Res<Time>,
 ) {
     egui::SidePanel::new(egui::panel::Side::Left, "Editor").resizable(true).default_width(400.0).show(egui_context.ctx_mut(), |ui|{
-
-        if ui.button("Start").clicked(){
-            sound_start_ev_writer.send(SoundStartEvent);
-        };
+        
+        sound_start_ev_writer.send(SoundStartEvent);
 
         let text_edit = ui.add(TextEdit::multiline(&mut editor.src).code_editor().desired_rows(20).desired_width(600.0));
         editor.last_edit.tick(time.delta());

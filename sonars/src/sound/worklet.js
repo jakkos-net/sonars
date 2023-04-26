@@ -1,4 +1,4 @@
-// https://github.com/rustwasm/wasm-bindgen/blob/main/examples/wasm-audio-worklet/src/worklet.js
+// Taken from the wasm_bindgen audio worklet example: https://github.com/rustwasm/wasm-bindgen/tree/c5b073ae58cb3b6d44252108ea9862bf0d04f3b6/examples/wasm-audio-worklet 
 registerProcessor("WasmProcessor", class WasmProcessor extends AudioWorkletProcessor {
   constructor(options) {
     super();

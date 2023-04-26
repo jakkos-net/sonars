@@ -25,11 +25,9 @@ web-audio-api = { version = "0.28.0", default-features = false, features = [
 ] }
 
 [target.'cfg(target_arch = "wasm32")'.dependencies]
-wasm-bindgen = "0.2.84"
-js-sys = "0.3.61"
-console_error_panic_hook = "0.1.7"
 web-sys = { version = "0.3.59", features = [
     "AudioContext",
+    "AudioContextOptions",
     "AudioDestinationNode",
     "AudioWorklet",
     "AudioWorkletNode",
@@ -43,6 +41,9 @@ web-sys = { version = "0.3.59", features = [
     "Window",
     "TextDecoder",
 ] }
+wasm-bindgen = "0.2.84"
+js-sys = "0.3.61"
+console_error_panic_hook = "0.1.7"
 wasm-bindgen-futures = "0.4.34"
 
 

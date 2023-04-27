@@ -2,6 +2,7 @@ use bevy::{
     ecs::system::SystemState,
     prelude::{EventReader, Plugin, ResMut, Resource, World},
 };
+use std::sync::Arc;
 use std::sync::Mutex;
 
 use crossbeam_queue::SegQueue;
@@ -82,7 +83,7 @@ impl SoundControl {
 }
 
 pub fn push_sound(new_fn: SoundFn) {
-    *CURRENT_SOUND_FN.lock().unwrap() = new_fn;
+    *CURRENT_SOUND_FN.lock().unwrap() = Arc::new(new_fn);
 }
 
 // todo_major: we can't ever have the WASM audio processor block while trying to get the next sound function, we can't use a mutex
@@ -91,4 +92,5 @@ pub fn try_pop_sound() -> Option<SoundFn> {
     todo!()
 }
 
-static CURRENT_SOUND_FN: Lazy<Mutex<SoundFn>> = Lazy::new(|| Mutex::new(Box::new(|_| 0.0)));
+static CURRENT_SOUND_FN: Lazy<Mutex<Arc<SoundFn>>> =
+    Lazy::new(|| Mutex::new(Arc::new(Box::new(|_| 0.0))));

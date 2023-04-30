@@ -18,6 +18,7 @@ fn get_ctx() -> Option<AudioContext> {
 // editted from the wasm_bindgen audio worklet example: https://github.com/rustwasm/wasm-bindgen/tree/c5b073ae58cb3b6d44252108ea9862bf0d04f3b6/examples/wasm-audio-worklet
 
 use super::SoundFn;
+use itertools::izip;
 use js_sys::Array;
 use js_sys::JsString;
 use std::sync::Arc;
@@ -35,12 +36,12 @@ async fn web_main() {
 }
 
 #[wasm_bindgen]
-pub struct WasmAudioProcessor(Box<dyn FnMut(&mut [f32]) -> bool>);
+pub struct WasmAudioProcessor(Box<dyn FnMut(&mut [f32], &mut [f32]) -> bool>);
 
 #[wasm_bindgen]
 impl WasmAudioProcessor {
-    pub fn process(&mut self, buf: &mut [f32]) -> bool {
-        self.0(buf)
+    pub fn process(&mut self, buf0: &mut [f32], buf1: &mut [f32]) -> bool {
+        self.0(buf0, buf1)
     }
     pub fn pack(self) -> usize {
         Box::into_raw(Box::new(self)) as usize
@@ -61,34 +62,40 @@ pub async fn wasm_audio() -> Result<AudioContext, JsValue> {
     Ok(ctx)
 }
 
-fn make_process_function() -> Box<dyn FnMut(&mut [f32]) -> bool> {
+fn make_process_function() -> Box<dyn FnMut(&mut [f32], &mut [f32]) -> bool> {
     let mut idx: usize = 0;
-    let mut sound_fn: Arc<SoundFn> = Arc::new(Box::new(|_| 0.0));
-    Box::new(move |buf: &mut [f32]| {
+    let mut sound_fn: Arc<SoundFn> = Arc::new(Box::new(|_| [0.0, 0.0]));
+    Box::new(move |buf0: &mut [f32], buf1: &mut [f32]| {
         if let Ok(current_sound_fn) = CURRENT_SOUND_FN.try_lock() {
             sound_fn = current_sound_fn.clone();
         }
-        for (i, f) in buf.iter_mut().enumerate() {
-            let t = (idx + i) as f32 / SAMPLE_RATE as f32;
-            *f = sound_fn(t);
-        }
-        idx += buf.len();
+
+        izip!(buf0.iter_mut(), buf1.iter_mut())
+            .enumerate()
+            .for_each(|(i, (f0, f1))| {
+                let t = (idx + i) as f32 / SAMPLE_RATE as f32;
+                [*f0, *f1] = sound_fn(t);
+            });
+        idx += buf0.len();
         true
     })
 }
 
 pub fn wasm_audio_node(
     ctx: &AudioContext,
-    process: Box<dyn FnMut(&mut [f32]) -> bool>,
+    process: Box<dyn FnMut(&mut [f32], &mut [f32]) -> bool>,
 ) -> Result<AudioWorkletNode, JsValue> {
     AudioWorkletNode::new_with_options(
         &ctx,
         "WasmProcessor",
-        &AudioWorkletNodeOptions::new().processor_options(Some(&js_sys::Array::of3(
-            &wasm_bindgen::module(),
-            &wasm_bindgen::memory(),
-            &WasmAudioProcessor(process).pack().into(),
-        ))),
+        &AudioWorkletNodeOptions::new()
+            .channel_count(2)
+            .output_channel_count(&JsValue::from(js_sys::Array::of1(&JsValue::from_f64(2.0))))
+            .processor_options(Some(&js_sys::Array::of3(
+                &wasm_bindgen::module(),
+                &wasm_bindgen::memory(),
+                &WasmAudioProcessor(process).pack().into(),
+            ))),
     )
 }
 

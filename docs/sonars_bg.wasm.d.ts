@@ -1,7 +1,7 @@
 /* tslint:disable */
 /* eslint-disable */
 export function main(a: number, b: number): number;
-export function wasmaudioprocessor_process(a: number, b: number, c: number, d: number): number;
+export function wasmaudioprocessor_process(a: number, b: number, c: number, d: number, e: number, f: number, g: number): number;
 export function wasmaudioprocessor_pack(a: number): number;
 export function wasmaudioprocessor_unpack(a: number): number;
 export function __wbg_wasmaudioprocessor_free(a: number): void;

@@ -5,10 +5,11 @@
 export class WasmAudioProcessor {
   free(): void;
 /**
-* @param {Float32Array} buf
+* @param {Float32Array} buf0
+* @param {Float32Array} buf1
 * @returns {boolean}
 */
-  process(buf: Float32Array): boolean;
+  process(buf0: Float32Array, buf1: Float32Array): boolean;
 /**
 * @returns {number}
 */
@@ -24,7 +25,7 @@ export type InitInput = RequestInfo | URL | Response | BufferSource | WebAssembl
 
 export interface InitOutput {
   readonly main: (a: number, b: number) => number;
-  readonly wasmaudioprocessor_process: (a: number, b: number, c: number, d: number) => number;
+  readonly wasmaudioprocessor_process: (a: number, b: number, c: number, d: number, e: number, f: number, g: number) => number;
   readonly wasmaudioprocessor_pack: (a: number) => number;
   readonly wasmaudioprocessor_unpack: (a: number) => number;
   readonly __wbg_wasmaudioprocessor_free: (a: number) => void;

@@ -7,6 +7,6 @@ registerProcessor("WasmProcessor", class WasmProcessor extends AudioWorkletProce
     this.processor = bindgen.WasmAudioProcessor.unpack(handle);
   }
   process(inputs, outputs) {
-    return this.processor.process(outputs[0][0]);
+    return this.processor.process(outputs[0][0], outputs[0][1]);
   }
 });

@@ -23,7 +23,7 @@ const INV_SAMPLE_RATE: f32 = (1.0 / (SAMPLE_RATE as f64)) as f32;
 
 pub struct SoundPlugin;
 
-pub type SoundFn = Box<dyn Fn(f32) -> f32 + Send + Sync>;
+pub type SoundFn = Box<dyn Fn(f32) -> [f32; 2] + Send + Sync>;
 
 impl Plugin for SoundPlugin {
     fn build(&self, app: &mut bevy::prelude::App) {
@@ -61,7 +61,7 @@ impl Default for SoundControl {
     fn default() -> Self {
         Self {
             queue: Default::default(),
-            next_fn: Box::new(|_| 0.0),
+            next_fn: Box::new(|_| [0.0, 0.0]),
         }
     }
 }
@@ -93,4 +93,4 @@ pub fn try_pop_sound() -> Option<SoundFn> {
 }
 
 static CURRENT_SOUND_FN: Lazy<Mutex<Arc<SoundFn>>> =
-    Lazy::new(|| Mutex::new(Arc::new(Box::new(|_| 0.0))));
+    Lazy::new(|| Mutex::new(Arc::new(Box::new(|_| [0.0, 0.0]))));

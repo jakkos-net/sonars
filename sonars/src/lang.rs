@@ -47,11 +47,18 @@ impl Program {
         let mut engine = Engine::new();
         engine.set_optimization_level(rhai::OptimizationLevel::Full);
         register_fns(&mut engine);
-        let inner_fn = Func::<(f32,), f32>::create_from_ast(engine, ast, "main");
+
+        let inner_fn = Func::<(f32,), rhai::Array>::create_from_ast(engine, ast, "main");
         if let Err(e) = inner_fn(1.0) {
             bail!("source code does not evalulate to a number!\n{e}")
         }
-        let sound_fn = Box::new(move |f| (inner_fn)(f).unwrap().clamp(-1.0, 1.0));
+        let sound_fn = Box::new(move |f| {
+            let v = (inner_fn)(f).unwrap();
+            [
+                v[0].as_float().unwrap_or(0.0).clamp(-1.0, 1.0),
+                v[1].as_float().unwrap_or(0.0).clamp(-1.0, 1.0),
+            ]
+        });
         Ok(sound_fn)
     }
 
@@ -76,13 +83,22 @@ pub fn compile(src: &str) -> anyhow::Result<SoundFn> {
         "
     );
 
-    let inner_fn = Func::<(f32,), f32>::create_from_script(engine, &script, "main")?;
+    // todo_major: work out if there is a faster way to return two floats from rhai, this way seems like it would be slow...
+
+    let inner_fn = Func::<(f32,), rhai::Array>::create_from_script(engine, &script, "main")?;
 
     if let Err(e) = inner_fn(1.0) {
         bail!("source code does not evalulate to a number!\n{e}")
     }
 
-    let sound_fn = Box::new(move |f| (inner_fn)(f).unwrap().clamp(-1.0, 1.0));
+    // todo_major deal with case where the rhai script returns a wrong-length or wrong-type array
+    let sound_fn = Box::new(move |f| {
+        let v = (inner_fn)(f).unwrap();
+        [
+            v[0].as_float().unwrap_or(0.0).clamp(-1.0, 1.0),
+            v[1].as_float().unwrap_or(0.0).clamp(-1.0, 1.0),
+        ]
+    });
 
     Ok(sound_fn)
 }

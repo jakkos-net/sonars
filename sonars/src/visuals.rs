@@ -74,7 +74,7 @@ fn visuals(
             (0..=n)
                 .map(|i| {
                     let t = (i as f32 / (n as f32)) * time_scale + time;
-                    let y = sound_fn(t) * height;
+                    let y = sound_fn(t)[0] * height;
                     y
                 })
                 .collect(),

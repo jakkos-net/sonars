@@ -1,3 +1,4 @@
+use itertools::izip;
 use web_audio_api::{
     context::{AudioContext, AudioContextOptions, AudioContextRegistration, BaseAudioContext},
     node::{AudioNode, ChannelConfig},
@@ -33,7 +34,7 @@ impl AudioNode for MyNode {
     }
 
     fn number_of_outputs(&self) -> usize {
-        1
+        2
     }
 }
 
@@ -66,15 +67,23 @@ impl AudioProcessor for MyProcessor {
         _scope: &RenderScope,
     ) -> bool {
         let output = &mut outputs[0];
-        output.set_number_of_channels(1);
+        output.set_number_of_channels(2);
         self.sample_idx += 128;
         let sound_fn_guard = CURRENT_SOUND_FN.lock().unwrap();
         let sound_fn = sound_fn_guard.as_ref();
-        output.channels_mut().iter_mut().for_each(|buf| {
-            buf.iter_mut().enumerate().for_each(|(i, output_sample)| {
-                *output_sample = sound_fn((self.sample_idx + i as u64) as f32 * INV_SAMPLE_RATE);
-            })
-        });
+
+        let channels = output.channels_mut();
+        let (left, right) = channels.split_at_mut(1);
+        let channel_0 = &mut left[0];
+        let channel_1 = &mut right[0];
+
+        izip!(channel_0.iter_mut(), channel_1.iter_mut())
+            .enumerate()
+            .for_each(|(i, (f0, f1))| {
+                let idx = self.sample_idx + i as u64;
+                let t = idx as f32 * INV_SAMPLE_RATE;
+                [*f0, *f1] = sound_fn(t);
+            });
 
         true
     }

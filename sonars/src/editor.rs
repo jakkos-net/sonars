@@ -35,7 +35,7 @@ struct CodeEditorData {
 impl Default for CodeEditorData {
     fn default() -> Self {
         Self {
-            src: "let signal = sin(330.0*t) * sin(33.0*t) * euc(7., 3., t);\n\nlet volume = 0.5;\n\nsignal*volume".into(),
+            src: "let signal = sin(330.0*t) * sin(33.0*t) * euc(7., 3., t);\n\nlet volume = 0.5;\n\nlet out=signal*volume;\n\n[out,out]".into(),
             error_text: "".into(),
             last_edit: Stopwatch::new(),
             waiting_to_compile: false,

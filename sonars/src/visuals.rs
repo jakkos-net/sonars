@@ -69,7 +69,7 @@ fn visuals(
         let height = controls.height;
         let n = data.wave_history_points;
         let time_scale = controls.time_scale;
-        let sound_fn = sound_control.current();
+        let sound_fn = sound_control.current_soundfn();
         data.wave_history.push_front(
             (0..=n)
                 .map(|i| {

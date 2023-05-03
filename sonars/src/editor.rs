@@ -86,10 +86,12 @@ fn coding_ui(
             ui.button("Compile!").clicked()
         };
 
+        ui.label(format!("Time: {:.1}s", sound.time()));
+
         if should_compile {
             editor.error_text = match compile(&editor.src) {
                 Ok(sound_fn) => {
-                    sound.push(sound_fn);
+                    sound.push_soundfn(sound_fn);
                     push_sound(compile(&editor.src).unwrap());
                     "Compilation succesful!".into()
                 },

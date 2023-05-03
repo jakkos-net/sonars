@@ -1,6 +1,7 @@
 use bevy::{
     ecs::system::SystemState,
-    prelude::{EventReader, Plugin, ResMut, Resource, World},
+    prelude::{EventReader, Plugin, Res, ResMut, Resource, World},
+    time::Time,
 };
 use std::sync::Arc;
 use std::sync::Mutex;
@@ -41,8 +42,8 @@ impl Plugin for SoundPlugin {
 #[derive(Clone)]
 pub struct SoundStartEvent;
 
-fn update_sound(mut sound_control: ResMut<SoundControl>) {
-    sound_control.update();
+fn update_sound(mut sound_control: ResMut<SoundControl>, time: Res<Time>) {
+    sound_control.update(time.elapsed_seconds_f64());
 }
 
 // todo_minor: find a better way to start sound
@@ -59,6 +60,8 @@ fn start_sound(world: &mut World) {
 pub struct SoundControl {
     queue: SegQueue<SoundFn>,
     next_fn: SoundFn,
+    start_time: f64,
+    elapsed_time: f64,
 }
 
 impl Default for SoundControl {
@@ -66,22 +69,35 @@ impl Default for SoundControl {
         Self {
             queue: Default::default(),
             next_fn: empty_sound_fn(),
+            start_time: 0.0,
+            elapsed_time: 0.0,
         }
     }
 }
 
 impl SoundControl {
-    pub fn push(&self, new_fn: SoundFn) {
+    pub fn push_soundfn(&self, new_fn: SoundFn) {
         self.queue.push(new_fn);
     }
 
-    fn update(&mut self) {
+    fn update(&mut self, time: f64) {
         while !self.queue.is_empty() {
             self.next_fn = self.queue.pop().unwrap();
         }
+        self.elapsed_time = time - self.start_time;
     }
 
-    pub fn current(&self) -> &SoundFn {
+    pub fn set_time(&mut self, new_elapsed_time: f64) {
+        let current_time = self.start_time + self.elapsed_time;
+        self.elapsed_time = new_elapsed_time;
+        self.start_time = current_time - self.elapsed_time;
+    }
+
+    pub fn time(&self) -> f64 {
+        self.elapsed_time
+    }
+
+    pub fn current_soundfn(&self) -> &SoundFn {
         &self.next_fn
     }
 }

@@ -5,9 +5,11 @@ use web_audio_api::{
     render::{AudioParamValues, AudioProcessor, AudioRenderQuantum, RenderScope},
 };
 
+use std::sync::Arc;
+
 use crate::sound::SAMPLE_RATE;
 
-use super::{CURRENT_SOUND_FN, INV_SAMPLE_RATE};
+use super::{empty_sound_fn, SoundFn, CURRENT_SOUND_FN, INV_SAMPLE_RATE};
 
 pub fn setup_worklet(context: &AudioContext) {
     let noise = MyNode::new(context);
@@ -53,9 +55,18 @@ impl MyNode {
     }
 }
 
-#[derive(Default)]
 struct MyProcessor {
     sample_idx: u64,
+    sound_fn: Arc<SoundFn>,
+}
+
+impl Default for MyProcessor {
+    fn default() -> Self {
+        Self {
+            sample_idx: 0,
+            sound_fn: Arc::new(empty_sound_fn()),
+        }
+    }
 }
 
 impl AudioProcessor for MyProcessor {

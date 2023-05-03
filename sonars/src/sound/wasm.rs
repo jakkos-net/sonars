@@ -17,7 +17,7 @@ fn get_ctx() -> Option<AudioContext> {
 
 // editted from the wasm_bindgen audio worklet example: https://github.com/rustwasm/wasm-bindgen/tree/c5b073ae58cb3b6d44252108ea9862bf0d04f3b6/examples/wasm-audio-worklet
 
-use super::SoundFn;
+use super::{empty_sound_fn, SoundFn};
 use itertools::izip;
 use js_sys::Array;
 use js_sys::JsString;
@@ -64,7 +64,7 @@ pub async fn wasm_audio() -> Result<AudioContext, JsValue> {
 
 fn make_process_function() -> Box<dyn FnMut(&mut [f32], &mut [f32]) -> bool> {
     let mut idx: usize = 0;
-    let mut sound_fn: Arc<SoundFn> = Arc::new(Box::new(|_| [0.0, 0.0]));
+    let mut sound_fn: Arc<SoundFn> = Arc::new(empty_sound_fn());
     Box::new(move |buf0: &mut [f32], buf1: &mut [f32]| {
         if let Ok(current_sound_fn) = CURRENT_SOUND_FN.try_lock() {
             sound_fn = current_sound_fn.clone();

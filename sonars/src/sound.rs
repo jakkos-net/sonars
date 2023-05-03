@@ -25,6 +25,10 @@ pub struct SoundPlugin;
 
 pub type SoundFn = Box<dyn Fn(f32) -> [f32; 2] + Send + Sync>;
 
+pub fn empty_sound_fn() -> SoundFn {
+    Box::new(|_| [0.0, 0.0])
+}
+
 impl Plugin for SoundPlugin {
     fn build(&self, app: &mut bevy::prelude::App) {
         app.init_resource::<SoundControl>();
@@ -61,7 +65,7 @@ impl Default for SoundControl {
     fn default() -> Self {
         Self {
             queue: Default::default(),
-            next_fn: Box::new(|_| [0.0, 0.0]),
+            next_fn: empty_sound_fn(),
         }
     }
 }
@@ -93,4 +97,4 @@ pub fn try_pop_sound() -> Option<SoundFn> {
 }
 
 static CURRENT_SOUND_FN: Lazy<Mutex<Arc<SoundFn>>> =
-    Lazy::new(|| Mutex::new(Arc::new(Box::new(|_| [0.0, 0.0]))));
+    Lazy::new(|| Mutex::new(Arc::new(empty_sound_fn())));

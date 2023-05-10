@@ -51,7 +51,7 @@ fn coding_ui(
     mut editor: ResMut<CodeEditorData>,
     mut visual_controls: ResMut<VisualsControls>,
     mut sound_start_ev_writer: EventWriter<SoundStartEvent>,
-    sound: Res<SoundControl>,
+    mut sound: ResMut<SoundControl>,
     time: Res<Time>,
 ) {
     let ctx = egui_context.ctx_mut();
@@ -86,7 +86,16 @@ fn coding_ui(
             ui.button("Compile!").clicked()
         };
 
-        ui.label(format!("Time: {:.1}s", sound.time()));
+        ui.horizontal(|ui|{
+            ui.label("Time: ");
+            let mut time = sound.time();
+            let old_time = time;
+            ui.add(DragValue::new(&mut time));
+            if time != old_time{
+                sound.set_time(time);
+            }
+            ui.label("s");
+            });
 
         if should_compile {
             editor.error_text = match compile(&editor.src) {

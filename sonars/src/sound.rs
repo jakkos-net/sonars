@@ -3,8 +3,8 @@ use bevy::{
     prelude::{EventReader, Plugin, Res, ResMut, Resource, World},
     time::Time,
 };
-use std::sync::Arc;
 use std::sync::Mutex;
+use std::sync::{atomic::AtomicUsize, Arc};
 
 use crossbeam_queue::SegQueue;
 use once_cell::sync::Lazy;
@@ -19,8 +19,10 @@ cfg_if::cfg_if! {
     }
 }
 
-const SAMPLE_RATE: u32 = 48_000;
+const SAMPLE_RATE: u32 = 44_000;
 const INV_SAMPLE_RATE: f32 = (1.0 / (SAMPLE_RATE as f64)) as f32;
+const TIME_DIFFERENCE_THRESHOLD: f32 = 200.0 / 1000.0;
+static SAMPLE_INDEX: AtomicUsize = AtomicUsize::new(0);
 
 pub struct SoundPlugin;
 
@@ -44,6 +46,15 @@ pub struct SoundStartEvent;
 
 fn update_sound(mut sound_control: ResMut<SoundControl>, time: Res<Time>) {
     sound_control.update(time.elapsed_seconds_f64());
+
+    let sample_index = SAMPLE_INDEX.load(std::sync::atomic::Ordering::Relaxed);
+    let audio_time = sample_index as f32 * INV_SAMPLE_RATE;
+    let app_time = sound_control.time() as f32;
+
+    if (audio_time - app_time).abs() > TIME_DIFFERENCE_THRESHOLD {
+        let new_index = (app_time * SAMPLE_RATE as f32) as usize;
+        SAMPLE_INDEX.store(new_index, std::sync::atomic::Ordering::Relaxed);
+    }
 }
 
 // todo_minor: find a better way to start sound

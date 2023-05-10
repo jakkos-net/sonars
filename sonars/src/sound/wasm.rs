@@ -30,6 +30,7 @@ use web_sys::AudioContextOptions;
 use web_sys::{AudioContext, AudioWorkletNode, AudioWorkletNodeOptions};
 
 use crate::sound::CURRENT_SOUND_FN;
+use crate::sound::SAMPLE_INDEX;
 
 async fn web_main() {
     wasm_audio().await.unwrap();
@@ -63,12 +64,14 @@ pub async fn wasm_audio() -> Result<AudioContext, JsValue> {
 }
 
 fn make_process_function() -> Box<dyn FnMut(&mut [f32], &mut [f32]) -> bool> {
-    let mut idx: usize = 0;
+    let mut idx: usize = SAMPLE_INDEX.load(std::sync::atomic::Ordering::Relaxed);
     let mut sound_fn: Arc<SoundFn> = Arc::new(empty_sound_fn());
     Box::new(move |buf0: &mut [f32], buf1: &mut [f32]| {
         if let Ok(current_sound_fn) = CURRENT_SOUND_FN.try_lock() {
             sound_fn = current_sound_fn.clone();
         }
+
+        let mut idx: usize = SAMPLE_INDEX.load(std::sync::atomic::Ordering::Relaxed);
 
         izip!(buf0.iter_mut(), buf1.iter_mut())
             .enumerate()
@@ -76,7 +79,7 @@ fn make_process_function() -> Box<dyn FnMut(&mut [f32], &mut [f32]) -> bool> {
                 let t = (idx + i) as f32 / SAMPLE_RATE as f32;
                 [*f0, *f1] = sound_fn(t);
             });
-        idx += buf0.len();
+        SAMPLE_INDEX.store(idx + buf0.len(), std::sync::atomic::Ordering::Relaxed);
         true
     })
 }

@@ -9,7 +9,7 @@ use std::sync::Arc;
 
 use crate::sound::SAMPLE_RATE;
 
-use super::{empty_sound_fn, SoundFn, CURRENT_SOUND_FN, INV_SAMPLE_RATE};
+use super::{empty_sound_fn, SoundFn, CURRENT_SOUND_FN, INV_SAMPLE_RATE, SAMPLE_INDEX};
 
 pub fn setup_worklet(context: &AudioContext) {
     let noise = MyNode::new(context);
@@ -56,14 +56,12 @@ impl MyNode {
 }
 
 struct MyProcessor {
-    sample_idx: u64,
     sound_fn: Arc<SoundFn>,
 }
 
 impl Default for MyProcessor {
     fn default() -> Self {
         Self {
-            sample_idx: 0,
             sound_fn: Arc::new(empty_sound_fn()),
         }
     }
@@ -77,9 +75,9 @@ impl AudioProcessor for MyProcessor {
         _params: AudioParamValues,
         _scope: &RenderScope,
     ) -> bool {
+        let sample_idx = SAMPLE_INDEX.load(std::sync::atomic::Ordering::Relaxed);
         let output = &mut outputs[0];
         output.set_number_of_channels(2);
-        self.sample_idx += 128;
         let sound_fn_guard = CURRENT_SOUND_FN.lock().unwrap();
         let sound_fn = sound_fn_guard.as_ref();
 
@@ -91,10 +89,15 @@ impl AudioProcessor for MyProcessor {
         izip!(channel_0.iter_mut(), channel_1.iter_mut())
             .enumerate()
             .for_each(|(i, (f0, f1))| {
-                let idx = self.sample_idx + i as u64;
+                let idx = sample_idx + i;
                 let t = idx as f32 * INV_SAMPLE_RATE;
                 [*f0, *f1] = sound_fn(t);
             });
+
+        SAMPLE_INDEX.store(
+            sample_idx + channel_0.len(),
+            std::sync::atomic::Ordering::Relaxed,
+        );
 
         true
     }

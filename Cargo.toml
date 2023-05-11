@@ -1,8 +1,6 @@
 [workspace]
-resolver = "2" # Important! wgpu/Bevy needs this!
-members = [
-    "sonars",
-]
+resolver = "2"                    # Important! wgpu/Bevy needs this!
+members = ["sonars", "bevy_funk"]
 
 [profile.dev.package."*"]
 opt-level = 3
@@ -13,4 +11,3 @@ inherits = "dev"
 debug = 1
 opt-level = 3
 incremental = true
-

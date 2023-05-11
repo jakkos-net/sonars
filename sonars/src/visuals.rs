@@ -6,7 +6,7 @@ use bevy_egui::{
     EguiContexts,
 };
 
-use crate::sound::SoundControl;
+use bevy_funk::SoundControl;
 
 pub struct VisualsPlugin;
 

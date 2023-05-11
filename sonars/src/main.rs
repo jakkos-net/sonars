@@ -1,13 +1,12 @@
 pub mod editor;
 pub mod lang;
 pub mod math;
-pub mod sound;
 pub mod visuals;
 
 use bevy::prelude::*;
 use bevy_egui::EguiPlugin;
+use bevy_funk::SoundPlugin;
 use editor::EditorPlugin;
-use sound::SoundPlugin;
 use visuals::VisualsPlugin;
 
 fn main() {

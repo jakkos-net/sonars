@@ -3,7 +3,8 @@ use std::f32::consts::TAU;
 use anyhow::bail;
 use rhai::{Engine, Func};
 
-use crate::{math::cached_bjorklund, sound::SoundFn};
+use crate::math::cached_bjorklund;
+use bevy_funk::SoundFn;
 
 enum Expr {
     Var(String),

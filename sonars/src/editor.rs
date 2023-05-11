@@ -7,11 +7,9 @@ use bevy_egui::{
     EguiContexts,
 };
 
-use crate::{
-    lang::compile,
-    sound::{push_sound, SoundControl, SoundStartEvent},
-    visuals::VisualsControls,
-};
+use crate::{lang::compile, visuals::VisualsControls};
+
+use bevy_funk::{push_sound, SoundControl, SoundStartEvent};
 
 pub struct EditorPlugin;
 

@@ -12,6 +12,7 @@ bevy = { version = "0.10.0", default-features = false, features = [
     "x11",
 ] }
 bevy_egui = { git = "https://github.com/mvlabat/bevy_egui" }
+bevy_funk = { path = "../bevy_funk" }
 cfg-if = "1.0.0"
 crossbeam-queue = "0.3.8"
 itertools = "0.10.5"
@@ -20,32 +21,8 @@ rhai = { version = "1.12.0", features = ["f32_float", "sync"] }
 thiserror = "1.0.39"
 
 
-[target.'cfg(not(target_arch = "wasm32"))'.dependencies]
-web-audio-api = { version = "0.28.0", default-features = false, features = [
-    "cpal",
-] }
-
 [target.'cfg(target_arch = "wasm32")'.dependencies]
-web-sys = { version = "0.3.59", features = [
-    "AudioContext",
-    "AudioContextOptions",
-    "AudioDestinationNode",
-    "AudioWorklet",
-    "AudioWorkletNode",
-    "AudioWorkletNodeOptions",
-    "Blob",
-    "BlobPropertyBag",
-    "Document",
-    "HtmlInputElement",
-    "HtmlLabelElement",
-    "Url",
-    "Window",
-    "TextDecoder",
-] }
-wasm-bindgen = "0.2.84"
-js-sys = "0.3.61"
 console_error_panic_hook = "0.1.7"
-wasm-bindgen-futures = "0.4.34"
 
 
 [features]

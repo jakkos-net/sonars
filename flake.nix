@@ -24,7 +24,7 @@
 
           buildInputs = [
             cmake
-            pkgconfig
+            pkg-config
             glib
             fontconfig
             atk

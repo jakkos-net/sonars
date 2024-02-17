@@ -1,7 +1,7 @@
 pub mod math;
 pub mod sound;
 
-use std::f32::consts::PI;
+use std::f32::consts::TAU;
 
 use bevy::prelude::*;
 use bevy_egui::{
@@ -25,9 +25,9 @@ fn main() {
 fn setup(mut sound: ResMut<SoundControl>) {
     sound
         .set(Box::new(|t| {
-            let s = (440.0 * 2.0 * PI * t).sin();
-            let bjork = saturate(bjorklund(7, 4, t));
-            let out = s * bjork;
+            let s = (440.0 * TAU * t).sin();
+            let b = saturate(bjorklund(7, 4, t));
+            let out = s * b;
             out
         }))
         .unwrap();
@@ -36,5 +36,9 @@ fn setup(mut sound: ResMut<SoundControl>) {
 fn ui(mut egui_context: ResMut<EguiContext>, time: Res<Time>) {
     egui::Window::new("Editor").show(egui_context.ctx_mut(), |ui| {
         ui.label("hello world!");
+        ui.label(format!(
+            "time: {:.2}",
+            time.startup().elapsed().as_secs_f32()
+        ))
     });
 }

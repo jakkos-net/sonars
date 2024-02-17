@@ -1,4 +1,4 @@
-use bevy::prelude::Plugin;
+use bevy::prelude::{Plugin, Resource};
 
 #[cfg(not(target_arch = "wasm32"))]
 use web_audio_api::{
@@ -7,8 +7,6 @@ use web_audio_api::{
 };
 #[cfg(target_arch = "wasm32")]
 use web_sys::{AudioBufferSourceNode, AudioContext, GainNode};
-
-use crate::lang::compile;
 
 const SAMPLE_RATE: u32 = 48_000;
 const INV_SAMPLE_RATE: f32 = 1.0 / (SAMPLE_RATE as f32);
@@ -24,6 +22,7 @@ impl Plugin for SoundPlugin {
     }
 }
 
+#[derive(Resource)]
 pub struct SoundControl {
     ctx: AudioContext,
     gain: GainNode,
@@ -66,9 +65,7 @@ impl SoundControl {
         self.buf.is_some()
     }
 
-    pub fn set(&mut self, src: &str) -> anyhow::Result<()> {
-        let sound_fn = compile(src)?;
-
+    pub fn set(&mut self, sound_fn: SoundFn) -> anyhow::Result<()> {
         let data = (0..BUFFER_SIZE)
             .into_iter()
             .map(|x| (sound_fn((x as f32) * INV_SAMPLE_RATE)))

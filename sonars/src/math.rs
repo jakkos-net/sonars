@@ -1,5 +1,3 @@
-// 1-to-1 translated from https://github.com/brianhouse/bjorklund/blob/master/__init__.py
-
 use self::bjorklund::bjorklund;
 
 pub mod bjorklund;

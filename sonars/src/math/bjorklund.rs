@@ -1,5 +1,6 @@
 use once_cell::sync::Lazy;
 
+// 1-to-1 translated from https://github.com/brianhouse/bjorklund/blob/master/__init__.py
 fn bjorklund_bool(steps: usize, pulses: usize) -> Vec<bool> {
     if pulses > steps {
         panic!("Steps: {steps} cannot bigger than pulses: {pulses} in bjorklund algorithm!");

@@ -1,7 +1,8 @@
 use bevy::{
-    ecs::system::SystemState,
+    app::Update,
+    ecs::system::Commands,
     log::info,
-    prelude::{EventReader, Plugin, Res, ResMut, Resource, World},
+    prelude::{Plugin, Res, ResMut, Resource},
     time::Time,
 };
 use dyn_clone::DynClone;
@@ -11,13 +12,14 @@ use std::sync::{atomic::AtomicUsize, Arc};
 use crossbeam_queue::SegQueue;
 use once_cell::sync::Lazy;
 
+use crate::native::SoundResources;
+
 cfg_if::cfg_if! {
     if #[cfg(target_arch = "wasm32")] {
         pub mod wasm;
         use crate::wasm::*;
     } else {
         pub mod native;
-        use crate::native::*;
     }
 }
 
@@ -39,38 +41,30 @@ pub fn empty_sound_fn() -> SoundFn {
 impl Plugin for SoundPlugin {
     fn build(&self, app: &mut bevy::prelude::App) {
         app.init_resource::<SoundControl>();
-        app.add_event::<SoundStartEvent>();
-        app.add_system(update_sound);
-        app.add_system(start_sound);
+        app.add_systems(Update, update);
     }
 }
 
-#[derive(Clone)]
-pub struct SoundStartEvent;
-
-fn update_sound(mut sound_control: ResMut<SoundControl>, time: Res<Time>) {
-    sound_control.update(time.elapsed_seconds_f64());
-
-    let sample_index = SAMPLE_INDEX.load(std::sync::atomic::Ordering::Relaxed);
-    let audio_time = sample_index as f32 * INV_SAMPLE_RATE;
-    let app_time = sound_control.time() as f32;
-
-    if (audio_time - app_time).abs() > TIME_DIFFERENCE_THRESHOLD {
-        let new_index = (app_time * SAMPLE_RATE as f32) as usize;
-        SAMPLE_INDEX.store(new_index, std::sync::atomic::Ordering::Relaxed);
-    }
-}
-
-// todo_minor: find a better way to start sound
-fn start_sound(world: &mut World) {
-    let mut events_state = SystemState::<EventReader<SoundStartEvent>>::new(world);
-    let mut events = events_state.get_mut(world);
-    let events: Vec<SoundStartEvent> = events.iter().cloned().collect(); // need to collect and clone to get rid of reference to world
-    for _ in events.into_iter() {
-        if !world.contains_non_send::<SoundResources>() {
-            world.init_non_send_resource::<SoundResources>();
+fn update(mut commands: Commands, mut sound_control: ResMut<SoundControl>, time: Res<Time>) {
+    match sound_control.state {
+        State::Starting => {
+            commands.init_resource::<SoundResources>();
             info!("Sound init!");
+            sound_control.state = State::Running
         }
+        State::Running => {
+            sound_control.update(time.elapsed_seconds_f64());
+
+            let sample_index = SAMPLE_INDEX.load(std::sync::atomic::Ordering::Relaxed);
+            let audio_time = sample_index as f32 * INV_SAMPLE_RATE;
+            let app_time = sound_control.time() as f32;
+
+            if (audio_time - app_time).abs() > TIME_DIFFERENCE_THRESHOLD {
+                let new_index = (app_time * SAMPLE_RATE as f32) as usize;
+                SAMPLE_INDEX.store(new_index, std::sync::atomic::Ordering::Relaxed);
+            }
+        }
+        State::Stopped => {}
     }
 }
 
@@ -81,6 +75,14 @@ pub struct SoundControl {
     sound_fn_changed: bool,
     start_time: f64,
     elapsed_time: f64,
+    state: State,
+}
+
+#[derive(Debug)]
+enum State {
+    Stopped,
+    Starting,
+    Running,
 }
 
 impl Default for SoundControl {
@@ -91,6 +93,7 @@ impl Default for SoundControl {
             sound_fn_changed: true,
             start_time: 0.0,
             elapsed_time: 0.0,
+            state: State::Stopped,
         }
     }
 }
@@ -126,6 +129,13 @@ impl SoundControl {
 
     pub fn current_soundfn(&self) -> &SoundFn {
         &self.next_fn
+    }
+
+    pub fn start(&mut self) {
+        match &self.state {
+            State::Stopped => self.state = State::Starting,
+            x => panic! {"Sound is in state {:?}, you can only start sound when it's stopped!", x},
+        }
     }
 }
 

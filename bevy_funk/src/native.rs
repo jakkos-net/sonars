@@ -1,3 +1,4 @@
+use bevy::ecs::system::Resource;
 use itertools::izip;
 use web_audio_api::{
     context::{AudioContext, AudioContextOptions, AudioContextRegistration, BaseAudioContext},
@@ -104,6 +105,7 @@ impl AudioProcessor for MyProcessor {
     }
 }
 
+#[derive(Resource)]
 pub struct SoundResources {
     pub ctx: AudioContext,
     pub time_start: f64,

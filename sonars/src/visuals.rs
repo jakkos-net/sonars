@@ -1,6 +1,9 @@
 use std::collections::VecDeque;
 
-use bevy::prelude::{Plugin, Res, ResMut, Resource};
+use bevy::{
+    app::Update,
+    prelude::{Plugin, Res, ResMut, Resource},
+};
 use bevy_egui::{
     egui::{self, emath, epaint, Color32, Pos2, Rect, Stroke},
     EguiContexts,
@@ -14,7 +17,7 @@ impl Plugin for VisualsPlugin {
     fn build(&self, app: &mut bevy::prelude::App) {
         app.init_resource::<VisualData>()
             .init_resource::<VisualsControls>()
-            .add_system(visuals);
+            .add_systems(Update, visuals);
     }
 }
 

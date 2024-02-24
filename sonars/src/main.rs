@@ -4,7 +4,7 @@ pub mod math;
 pub mod visuals;
 
 use bevy::prelude::*;
-use bevy_funk::{SoundControl, SoundPlugin, SoundStartEvent};
+use bevy_funk::{SoundControl, SoundPlugin};
 use math::{bjorklund::bjork, hat, sat};
 use std::f32::consts::TAU;
 
@@ -16,15 +16,15 @@ use bevy_egui::{
 fn main() {
     App::new()
         .add_plugins(DefaultPlugins)
-        .add_plugin(EguiPlugin)
-        .add_plugin(SoundPlugin)
-        .add_startup_system(setup)
-        .add_system(ui)
+        .add_plugins(EguiPlugin)
+        .add_plugins(SoundPlugin)
+        .add_systems(Startup, setup)
+        .add_systems(Update, ui)
         .run();
 }
 
-fn setup(sound: Res<SoundControl>, mut sound_start_ev_writer: EventWriter<SoundStartEvent>) {
-    sound_start_ev_writer.send(SoundStartEvent);
+fn setup(mut sound: ResMut<SoundControl>) {
+    sound.start();
     sound.push_soundfn(Box::new(|t| {
         let n = seq!(t; 440.0, 320.0, 660.0);
         let s = (n * TAU * t).sin();
@@ -40,9 +40,6 @@ fn setup(sound: Res<SoundControl>, mut sound_start_ev_writer: EventWriter<SoundS
 fn ui(mut egui_context: EguiContexts, time: Res<Time>) {
     egui::Window::new("Editor").show(egui_context.ctx_mut(), |ui| {
         ui.label("hello world!");
-        ui.label(format!(
-            "time: {:.2}",
-            time.startup().elapsed().as_secs_f32()
-        ));
+        ui.label(format!("time: {:.2}", time.elapsed().as_secs_f32()));
     });
 }

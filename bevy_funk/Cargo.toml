@@ -6,7 +6,7 @@ edition = "2021"
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
-bevy = "0.10.1"
+bevy = "0.13"
 cfg-if = "1.0.0"
 crossbeam-queue = "0.3.8"
 dyn-clone = "1.0.16"

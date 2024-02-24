@@ -121,9 +121,6 @@ impl Default for SoundResources {
         setup_worklet(&ctx);
 
         let time_start = ctx.current_time();
-        Self {
-            ctx,
-            time_start: time_start,
-        }
+        Self { ctx, time_start }
     }
 }

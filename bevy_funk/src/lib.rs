@@ -1,8 +1,10 @@
 use bevy::{
     ecs::system::SystemState,
+    log::info,
     prelude::{EventReader, Plugin, Res, ResMut, Resource, World},
     time::Time,
 };
+use dyn_clone::DynClone;
 use std::sync::Mutex;
 use std::sync::{atomic::AtomicUsize, Arc};
 
@@ -26,7 +28,9 @@ static SAMPLE_INDEX: AtomicUsize = AtomicUsize::new(0);
 
 pub struct SoundPlugin;
 
-pub type SoundFn = Box<dyn Fn(f32) -> [f32; 2] + Send + Sync>;
+pub type SoundFn = Box<dyn SoundFnTrait>;
+pub trait SoundFnTrait: Fn(f32) -> [f32; 2] + Send + Sync + DynClone {}
+impl<T> SoundFnTrait for T where T: Fn(f32) -> [f32; 2] + Clone + Send + Sync {}
 
 pub fn empty_sound_fn() -> SoundFn {
     Box::new(|_| [0.0, 0.0])
@@ -63,7 +67,10 @@ fn start_sound(world: &mut World) {
     let mut events = events_state.get_mut(world);
     let events: Vec<SoundStartEvent> = events.iter().cloned().collect(); // need to collect and clone to get rid of reference to world
     for _ in events.into_iter() {
-        world.init_non_send_resource::<SoundResources>();
+        if !world.contains_non_send::<SoundResources>() {
+            world.init_non_send_resource::<SoundResources>();
+            info!("Sound init!");
+        }
     }
 }
 
@@ -71,6 +78,7 @@ fn start_sound(world: &mut World) {
 pub struct SoundControl {
     queue: SegQueue<SoundFn>,
     next_fn: SoundFn,
+    sound_fn_changed: bool,
     start_time: f64,
     elapsed_time: f64,
 }
@@ -80,6 +88,7 @@ impl Default for SoundControl {
         Self {
             queue: Default::default(),
             next_fn: empty_sound_fn(),
+            sound_fn_changed: true,
             start_time: 0.0,
             elapsed_time: 0.0,
         }
@@ -94,8 +103,15 @@ impl SoundControl {
     fn update(&mut self, time: f64) {
         while !self.queue.is_empty() {
             self.next_fn = self.queue.pop().unwrap();
+            self.sound_fn_changed = true;
         }
         self.elapsed_time = time - self.start_time;
+
+        if self.sound_fn_changed {
+            let new_sound_fn = dyn_clone::clone_box(&*self.next_fn);
+            set_sound(new_sound_fn);
+            self.sound_fn_changed = false;
+        }
     }
 
     pub fn set_time(&mut self, new_elapsed_time: f64) {
@@ -113,14 +129,8 @@ impl SoundControl {
     }
 }
 
-pub fn push_sound(new_fn: SoundFn) {
+fn set_sound(new_fn: SoundFn) {
     *CURRENT_SOUND_FN.lock().unwrap() = Arc::new(new_fn);
-}
-
-// todo_major: we can't ever have the WASM audio processor block while trying to get the next sound function, we can't use a mutex
-
-pub fn try_pop_sound() -> Option<SoundFn> {
-    todo!()
 }
 
 static CURRENT_SOUND_FN: Lazy<Mutex<Arc<SoundFn>>> =

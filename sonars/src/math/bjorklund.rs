@@ -83,7 +83,7 @@ fn cached_bjorklund(steps: usize, pulses: usize, index: usize) -> bool {
     CACHED_BJORKLUND[cached_bjorklund_index(steps, pulses, index)]
 }
 
-pub fn bjorklund(steps: usize, pulses: usize, t: f32) -> f32 {
+pub fn bjork(steps: usize, pulses: usize, t: f32) -> f32 {
     let index = (steps as f32 * (t % 1.0)) as usize;
     if cached_bjorklund(steps, pulses, index) {
         1.0

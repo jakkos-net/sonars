@@ -9,7 +9,7 @@ use bevy_egui::{
     EguiContext, EguiPlugin,
 };
 
-use math::{bjorklund::bjorklund, saturate};
+use math::{bjorklund::bjork, sat};
 use sound::{SoundControl, SoundPlugin};
 
 fn main() {
@@ -25,9 +25,9 @@ fn main() {
 fn setup(mut sound: ResMut<SoundControl>) {
     sound
         .set(Box::new(|t| {
-            let s = (440.0 * TAU * t).sin();
-            let b = saturate(bjorklund(7, 4, t));
-            let out = s * b;
+            let s = (seq!(t; 440.0, 220.0, 330.0, 900.0) * TAU * t).sin();
+            // let b = sat(bjork(7, 4, t));
+            let out = s;
             out
         }))
         .unwrap();

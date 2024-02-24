@@ -6,12 +6,8 @@ edition = "2021"
 [dependencies]
 anyhow = "1.0.69"
 # bevy_winit render bevy_asset bevy_gilrs bevy_scene wayland x11
-bevy = { version = "0.10.0", default-features = false, features = [
-    "bevy_winit",
-    "bevy_render",
-    "x11",
-] }
-bevy_egui = { git = "https://github.com/mvlabat/bevy_egui" }
+bevy = "0.10"
+bevy_egui = "0.20"
 bevy_funk = { path = "../bevy_funk" }
 cfg-if = "1.0.0"
 crossbeam-queue = "0.3.8"

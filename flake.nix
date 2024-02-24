@@ -18,9 +18,16 @@
       with pkgs;
       {
         devShells.default = mkShell {
-          
-
-          LD_LIBRARY_PATH = pkgs.lib.makeLibraryPath [ pkgs.vulkan-loader ];
+          LD_LIBRARY_PATH = with pkgs; lib.makeLibraryPath [
+            libGL
+            vulkan-loader
+            libxkbcommon
+            wayland
+            xorg.libX11
+            xorg.libXcursor
+            xorg.libXi
+            xorg.libXrandr
+          ];
 
           buildInputs = [
             cmake

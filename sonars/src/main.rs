@@ -11,12 +11,14 @@ use bevy_egui::{
     egui::{self},
     EguiContexts, EguiPlugin,
 };
+use visuals::VisualsPlugin;
 
 fn main() {
     App::new()
         .add_plugins(DefaultPlugins)
         .add_plugins(EguiPlugin)
         .add_plugins(SoundPlugin)
+        .add_plugins(VisualsPlugin)
         .add_systems(Startup, setup)
         .add_systems(Update, ui)
         .run();
@@ -33,9 +35,10 @@ fn setup(mut sound: ResMut<SoundControl>) {
     sound.push_soundfn(Box::new(|t| {
         //here
 
-        let d = detune!(5, 1.1, |k, t| sin(330.0 * k * t))(t);
+        let note = seq![440.0, 440.0, 330.0, 660.0](t);
+        let d = detune!(2, 0.25, |k, t| quant(tri((note + k) * t), 10))(t);
         let e = env![0.0, 1.0, 0.0];
-        let pat = seq![bjork!(7, 3), bjork!(9, 5)](t);
+        let pat = seq![|t| 1.0 - id(t), id, id](t);
         let out = e(pat) * d;
         //out
         let vol = 0.2;

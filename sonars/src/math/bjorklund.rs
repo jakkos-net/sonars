@@ -84,7 +84,7 @@ pub fn cached_bjorklund(steps: usize, pulses: usize, index: usize) -> bool {
 }
 
 #[macro_export]
-macro_rules! bjork {
+macro_rules! euc {
     ($steps: expr, $pulses: expr) => {
         |t: f32| {
             use $crate::math::bjorklund::cached_bjorklund;

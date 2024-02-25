@@ -1,11 +1,11 @@
 use std::f32::consts::TAU;
 
-use crate::bjork;
+use crate::euc;
 
 pub mod bjorklund;
 
 pub fn cache_maths() {
-    bjork!(1, 1)(1.0);
+    euc!(1, 1)(1.0);
 }
 
 pub fn sat(f: f32) -> f32 {
@@ -56,6 +56,15 @@ pub fn id(f: f32) -> f32 {
     f
 }
 
+pub fn pow(f: f32, p: f32) -> f32 {
+    f.powf(p)
+}
+
+pub fn quant(f: f32, n: usize) -> f32 {
+    let n = n as f32;
+    (((f * n) as usize) as f32) / n
+}
+
 #[macro_export]
 macro_rules! seq {
     ($($e:expr),*) => {
@@ -89,13 +98,13 @@ macro_rules! detune {
         let f = $f;
         let n = $n;
         let k = $k as f32;
-        let mut up = 1.0;
-        let mut down = 1.0;
+        let mut up = 0.0;
+        let mut down = 0.0;
         move |t: f32| {
             let mut acc = f(1.0, t);
             for _ in 0..n {
-                up *= k;
-                down /= k;
+                up += k;
+                down -= k;
                 acc += f(up, t);
                 acc += f(down, t);
             }

@@ -79,18 +79,27 @@ fn cached_bjorklund_index(steps: usize, pulses: usize, index: usize) -> usize {
     steps_offset + pulses_offset + index as usize
 }
 
-fn cached_bjorklund(steps: usize, pulses: usize, index: usize) -> bool {
+pub fn cached_bjorklund(steps: usize, pulses: usize, index: usize) -> bool {
     CACHED_BJORKLUND[cached_bjorklund_index(steps, pulses, index)]
 }
 
-pub fn bjork(steps: usize, pulses: usize, t: f32) -> f32 {
-    let index = (steps as f32 * (t % 1.0)) as usize;
-    if cached_bjorklund(steps, pulses, index) {
-        (t * steps as f32) % 1.0
-    } else {
-        0.0
-    }
+#[macro_export]
+macro_rules! bjork {
+    ($steps: expr, $pulses: expr) => {
+        |t: f32| {
+            use $crate::math::bjorklund::cached_bjorklund;
+            let steps: usize = $steps;
+            let pulses: usize = $pulses;
+            let index = (steps as f32 * (t % 1.0)) as usize;
+            if cached_bjorklund(steps, pulses, index) {
+                (t * steps as f32) % 1.0
+            } else {
+                0.0
+            }
+        }
+    };
 }
+
 #[cfg(test)]
 mod tests {
 

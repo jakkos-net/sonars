@@ -57,13 +57,13 @@ impl MyNode {
 }
 
 struct MyProcessor {
-    sound_fn: Arc<SoundFn>,
+    _sound_fn: Arc<SoundFn>,
 }
 
 impl Default for MyProcessor {
     fn default() -> Self {
         Self {
-            sound_fn: Arc::new(empty_sound_fn()),
+            _sound_fn: Arc::new(empty_sound_fn()),
         }
     }
 }

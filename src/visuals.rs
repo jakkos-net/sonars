@@ -39,9 +39,9 @@ pub struct VisualsControls {
 impl Default for VisualsControls {
     fn default() -> Self {
         Self {
-            time_scale: 0.1,
+            time_scale: 0.002,
             fade_off: 2.0,
-            height: 0.5,
+            height: 0.9,
             thickness: 1.0,
         }
     }
@@ -51,7 +51,7 @@ impl Default for VisualData {
     fn default() -> Self {
         Self {
             wave_history: Default::default(),
-            wave_history_len: 30,
+            wave_history_len: 100,
             wave_history_points: 256,
         }
     }

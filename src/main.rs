@@ -1,10 +1,10 @@
 pub mod editor;
 pub mod lang;
 pub mod math;
+mod sound;
 pub mod visuals;
 
 use bevy::prelude::*;
-use bevy_funk::{SoundControl, SoundPlugin};
 use math::*;
 
 use bevy_egui::{
@@ -17,7 +17,7 @@ fn main() {
     App::new()
         .add_plugins(DefaultPlugins)
         .add_plugins(EguiPlugin)
-        .add_plugins(SoundPlugin)
+        .add_plugins(sound::SoundPlugin)
         .add_plugins(VisualsPlugin)
         .add_systems(Startup, setup)
         .add_systems(Update, ui)
@@ -30,7 +30,7 @@ fn ui(mut egui_context: EguiContexts, time: Res<Time>) {
     });
 }
 
-fn setup(mut sound: ResMut<SoundControl>) {
+fn setup(mut sound: ResMut<sound::SoundControl>) {
     sound.start();
     sound.push_soundfn(Box::new(|t| {
         //here

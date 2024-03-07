@@ -8,7 +8,7 @@ use web_audio_api::{
 
 use std::sync::Arc;
 
-use crate::SAMPLE_RATE;
+use crate::sound::SAMPLE_RATE;
 
 use super::{empty_sound_fn, SoundFn, CURRENT_SOUND_FN, INV_SAMPLE_RATE, SAMPLE_INDEX};
 

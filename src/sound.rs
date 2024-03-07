@@ -1,30 +1,36 @@
-use bevy::{
-    app::Update,
-    ecs::system::Commands,
-    log::info,
-    prelude::{Plugin, Res, ResMut, Resource},
-    time::Time,
-};
-use dyn_clone::DynClone;
-use std::sync::Mutex;
-use std::sync::{atomic::AtomicUsize, Arc};
-
-use crossbeam_queue::SegQueue;
-use once_cell::sync::Lazy;
-
-use crate::native::SoundResources;
+use bevy::prelude::{Plugin, Resource};
 
 cfg_if::cfg_if! {
     if #[cfg(target_arch = "wasm32")] {
         pub mod wasm;
         use crate::wasm::*;
+        use web_sys::{AudioBufferSourceNode, AudioContext, GainNode};
     } else {
         pub mod native;
+        use web_audio_api::{
+            context::{AudioContext, AudioContextOptions, BaseAudioContext},
+            node::{AudioBufferSourceNode, AudioNode, AudioScheduledSourceNode, GainNode},
+        };
+        use crate::sound::native::SoundResources;
     }
 }
 
-const SAMPLE_RATE: u32 = 44_000;
-const INV_SAMPLE_RATE: f32 = (1.0 / (SAMPLE_RATE as f64)) as f32;
+use bevy::{
+    app::Update,
+    ecs::system::Commands,
+    log::info,
+    prelude::{Res, ResMut},
+    time::Time,
+};
+use crossbeam_queue::SegQueue;
+use dyn_clone::DynClone;
+use once_cell::sync::Lazy;
+use std::sync::Mutex;
+use std::sync::{atomic::AtomicUsize, Arc};
+
+const SAMPLE_RATE: u32 = 48_000;
+const INV_SAMPLE_RATE: f32 = 1.0 / (SAMPLE_RATE as f32);
+const BUFFER_SIZE: u32 = SAMPLE_RATE * 2;
 const TIME_DIFFERENCE_THRESHOLD: f32 = 200.0 / 1000.0;
 static SAMPLE_INDEX: AtomicUsize = AtomicUsize::new(0);
 

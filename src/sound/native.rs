@@ -10,7 +10,7 @@ use std::sync::Arc;
 
 use crate::sound::SAMPLE_RATE;
 
-use super::{empty_sound_fn, SoundFn, CURRENT_SOUND_FN, INV_SAMPLE_RATE, SAMPLE_INDEX};
+use super::{empty_sound_fn, FloatOut, SoundFn, CURRENT_SOUND_FN, INV_SAMPLE_RATE, SAMPLE_INDEX};
 
 pub fn setup_worklet(context: &AudioContext) {
     let noise = MyNode::new(context);
@@ -92,8 +92,10 @@ impl AudioProcessor for MyProcessor {
             .enumerate()
             .for_each(|(i, (f0, f1))| {
                 let idx = sample_idx + i;
-                let t = idx as f32 * INV_SAMPLE_RATE;
-                [*f0, *f1] = sound_fn(t);
+                let t = idx as f64 * INV_SAMPLE_RATE;
+                let [f0_n, f1_n] = sound_fn(t);
+                *f0 = f0_n as FloatOut;
+                *f1 = f1_n as FloatOut;
             });
 
         SAMPLE_INDEX.store(

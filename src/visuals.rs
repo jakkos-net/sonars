@@ -9,7 +9,7 @@ use bevy_egui::{
     EguiContexts,
 };
 
-use crate::sound::SoundControl;
+use crate::sound::{Float, FloatOut, SoundControl};
 
 pub struct VisualsPlugin;
 
@@ -23,14 +23,14 @@ impl Plugin for VisualsPlugin {
 
 #[derive(Resource)]
 pub struct VisualData {
-    wave_history: VecDeque<Vec<f32>>,
+    wave_history: VecDeque<Vec<FloatOut>>,
     wave_history_len: usize,
     wave_history_points: usize,
 }
 
 #[derive(Resource)]
 pub struct VisualsControls {
-    pub time_scale: f32,
+    pub time_scale: Float,
     pub fade_off: f32,
     pub height: f32,
     pub thickness: f32,
@@ -65,7 +65,7 @@ fn visuals(
 ) {
     egui::CentralPanel::default().show(egui_context.ctx_mut(), |ui| {
         ui.ctx().request_repaint();
-        let time = ui.input(|input| input.time) as f32;
+        let time = ui.input(|input| input.time);
 
         let (_id, rect) = ui.allocate_space(ui.available_size());
 
@@ -76,9 +76,9 @@ fn visuals(
         data.wave_history.push_front(
             (0..=n)
                 .map(|i| {
-                    let t = (i as f32 / (n as f32)) * time_scale + time;
-                    let y = sound_fn(t)[0] * height;
-                    y
+                    let t = (i as f64 / (n as f64)) * time_scale + time;
+                    let y = sound_fn(t)[0] * height as Float;
+                    y as FloatOut
                 })
                 .collect(),
         );
@@ -90,8 +90,9 @@ fn visuals(
         let thickness = controls.thickness;
         let fade_off = controls.fade_off;
         data.wave_history.iter().enumerate().for_each(|(i, ys)| {
-            let l_norm = (((data.wave_history_len - i) as f32) / (data.wave_history_len as f32))
-                .powf(fade_off);
+            let l_norm = (((data.wave_history_len - i) as FloatOut)
+                / (data.wave_history_len as FloatOut))
+                .powf(fade_off as FloatOut);
             let l = (l_norm * 255.0) as u8;
             let color = Color32::from_additive_luminance(l);
 
@@ -99,7 +100,7 @@ fn visuals(
                 .iter()
                 .enumerate()
                 .map(|(i, y)| {
-                    let t = i as f32 / (n as f32);
+                    let t = i as FloatOut / (n as FloatOut);
                     to_screen * bevy_egui::egui::pos2(t, *y)
                 })
                 .collect();

@@ -35,14 +35,19 @@ fn setup(mut sound: ResMut<sound::SoundControl>) {
     sound.push_soundfn(Box::new(|t| {
         //here
 
-        let note = seq![440.0, 440.0, 330.0, 660.0](t);
-        let d = detune!(2, 0.25, |k, t| quant(tri((note + k) * t), 10))(t);
-        let e = env![0.0, 1.0, 0.0];
-        let pat = seq![|t| 1.0 - id(t), id, id](t);
-        let out = e(pat) * d;
+        // let note = seq![440.0, 440.0, 330.0, 660.0](t);
+        // let d = detune!(2, 0.25, |k, t| quant(tri((note + k) * t), 10))(t);
+        // let e = env![0.0, 1.0, 0.0];
+        // let pat = seq![|t| 1.0 - id(t), id, id](t);
+        // let out = e(pat) * d;
+        let m = sin(200.0 * t) * 50.0;
+        // let m = 0.0;
+        let out = sin((800.0 + m) * t);
+        // let out = sin(440.0 * t);
         //out
-        let vol = 0.2;
-        let out = sat(vol * out);
+
+        let vol = 0.1;
+        let out = clip(vol * out);
         [out, out]
     }));
 }

@@ -1,22 +1,22 @@
-use std::f32::consts::TAU;
-
-use crate::euc;
+use crate::{euc, sound::Float};
 
 pub mod bjorklund;
+
+const TAU: Float = std::f64::consts::TAU as Float;
 
 pub fn cache_maths() {
     euc!(1, 1)(1.0);
 }
 
-pub fn sat(f: f32) -> f32 {
+pub fn sat(f: Float) -> Float {
     f.clamp(0.0, 1.0)
 }
 
-pub fn clip(f: f32) -> f32 {
+pub fn clip(f: Float) -> Float {
     f.clamp(-1.0, 1.0)
 }
 
-pub fn abs(f: f32) -> f32 {
+pub fn abs(f: Float) -> Float {
     f.abs()
 }
 
@@ -26,47 +26,47 @@ macro_rules! avg {
         |t| {
             use $crate::math::Callable;
             let v: Vec<Box<dyn Callable>> = vec![$(Box::new($e)),*];
-            let sum: f32 = v.iter().map(|f| f.call(t)).sum();
-            sum/(v.len() as f32)
+            let sum: TimeInType = v.iter().map(|f| f.call(t)).sum();
+            sum/(v.len() as TimeInType)
         }
     };
 }
 
-pub fn sin(f: f32) -> f32 {
+pub fn sin(f: Float) -> Float {
     (f * TAU).sin()
 }
 
-pub fn cos(f: f32) -> f32 {
+pub fn cos(f: Float) -> Float {
     (f * TAU).cos()
 }
 
-pub fn tan(f: f32) -> f32 {
+pub fn tan(f: Float) -> Float {
     (f * TAU).tan()
 }
 
-pub fn saw(f: f32) -> f32 {
+pub fn saw(f: Float) -> Float {
     (f % 1.0) * 2.0 - 1.0
 }
 
-pub fn tri(f: f32) -> f32 {
+pub fn tri(f: Float) -> Float {
     saw(f).abs() * 2.0 - 1.0
 }
 
-pub fn sqr(f: f32) -> f32 {
-    ((f % 2.0) as usize) as f32 - 1.0
+pub fn sqr(f: Float) -> Float {
+    ((f % 2.0) as usize) as Float - 1.0
 }
 
-pub fn id(f: f32) -> f32 {
+pub fn id(f: Float) -> Float {
     f
 }
 
-pub fn pow(f: f32, p: f32) -> f32 {
+pub fn pow(f: Float, p: Float) -> Float {
     f.powf(p)
 }
 
-pub fn quant(f: f32, n: usize) -> f32 {
-    let n = n as f32;
-    (((f * n) as usize) as f32) / n
+pub fn quant(f: Float, n: usize) -> Float {
+    let n = n as Float;
+    (((f * n) as usize) as Float) / n
 }
 
 #[macro_export]
@@ -75,7 +75,7 @@ macro_rules! seq {
         |t| {
             use $crate::math::Callable;
             let v: &[Box<dyn Callable>] = &[$(Box::new($e)),*];
-            let t = t % (v.len() as f32);
+            let t = t % (v.len() as TimeInType);
             let step = t as usize;
             let frac = t % 1.0;
             (v[step]).call(frac)
@@ -88,7 +88,7 @@ macro_rules! env {
     ($($e:expr),*) => {{
         |t| {
             let v = [$($e),*];
-            let scaled_t:f32 = (t % 1.0) * (v.len()-1) as f32;
+            let scaled_t:TimeInType = (t % 1.0) * (v.len()-1) as TimeInType;
             let step = scaled_t as usize;
             let frac = scaled_t % 1.0;
             v[step] * (1.0-frac) + v[step+1] * frac
@@ -101,10 +101,10 @@ macro_rules! detune {
     ($n:expr, $k:expr, $f: expr) => {{
         let f = $f;
         let n = $n;
-        let k = $k as f32;
+        let k = $k as TimeInType;
         let mut up = 0.0;
         let mut down = 0.0;
-        move |t: f32| {
+        move |t: TimeInType| {
             let mut acc = f(1.0, t);
             for _ in 0..n {
                 up += k;
@@ -113,31 +113,31 @@ macro_rules! detune {
                 acc += f(down, t);
             }
 
-            acc / ((n * 2 + 1) as f32)
+            acc / ((n * 2 + 1) as TimeInType)
         }
     }};
 }
 pub trait Callable {
-    fn call(&self, t: f32) -> f32;
+    fn call(&self, t: Float) -> Float;
 }
 
 impl<T> Callable for T
 where
-    T: Fn(f32) -> f32,
+    T: Fn(Float) -> Float,
 {
-    fn call(&self, t: f32) -> f32 {
+    fn call(&self, t: Float) -> Float {
         (self)(t)
     }
 }
 
-impl Callable for f32 {
-    fn call(&self, _t: f32) -> f32 {
+impl Callable for Float {
+    fn call(&self, _t: Float) -> Float {
         *self
     }
 }
 
 impl Callable for usize {
-    fn call(&self, _t: f32) -> f32 {
-        *self as f32
+    fn call(&self, _t: Float) -> Float {
+        *self as Float
     }
 }

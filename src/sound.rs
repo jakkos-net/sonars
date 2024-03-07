@@ -7,10 +7,6 @@ cfg_if::cfg_if! {
         use web_sys::{AudioBufferSourceNode, AudioContext, GainNode};
     } else {
         pub mod native;
-        use web_audio_api::{
-            context::{AudioContext, AudioContextOptions, BaseAudioContext},
-            node::{AudioBufferSourceNode, AudioNode, AudioScheduledSourceNode, GainNode},
-        };
         use crate::sound::native::SoundResources;
     }
 }
@@ -29,16 +25,20 @@ use std::sync::Mutex;
 use std::sync::{atomic::AtomicUsize, Arc};
 
 const SAMPLE_RATE: u32 = 48_000;
-const INV_SAMPLE_RATE: f32 = 1.0 / (SAMPLE_RATE as f32);
-const BUFFER_SIZE: u32 = SAMPLE_RATE * 2;
-const TIME_DIFFERENCE_THRESHOLD: f32 = 200.0 / 1000.0;
+const INV_SAMPLE_RATE: Float = 1.0 / (SAMPLE_RATE as Float);
+const TIME_DIFFERENCE_THRESHOLD: Float = 200.0 / 1000.0;
 static SAMPLE_INDEX: AtomicUsize = AtomicUsize::new(0);
 
 pub struct SoundPlugin;
 
 pub type SoundFn = Box<dyn SoundFnTrait>;
-pub trait SoundFnTrait: Fn(f32) -> [f32; 2] + Send + Sync + DynClone {}
-impl<T> SoundFnTrait for T where T: Fn(f32) -> [f32; 2] + Clone + Send + Sync {}
+pub trait SoundFnTrait: Fn(Float) -> [Float; 2] + Send + Sync + DynClone {}
+impl<T> SoundFnTrait for T where T: Fn(f64) -> [Float; 2] + Clone + Send + Sync {}
+
+// We may want to use different types for computing and outputting sounds
+// e.g. we may want f64 for precision when calculating things, but wasm only accepts f32 as output
+pub type Float = f64;
+pub type FloatOut = f32;
 
 pub fn empty_sound_fn() -> SoundFn {
     Box::new(|_| [0.0, 0.0])
@@ -62,11 +62,11 @@ fn update(mut commands: Commands, mut sound_control: ResMut<SoundControl>, time:
             sound_control.update(time.elapsed_seconds_f64());
 
             let sample_index = SAMPLE_INDEX.load(std::sync::atomic::Ordering::Relaxed);
-            let audio_time = sample_index as f32 * INV_SAMPLE_RATE;
-            let app_time = sound_control.time() as f32;
+            let audio_time = sample_index as Float * INV_SAMPLE_RATE;
+            let app_time = sound_control.time() as Float;
 
             if (audio_time - app_time).abs() > TIME_DIFFERENCE_THRESHOLD {
-                let new_index = (app_time * SAMPLE_RATE as f32) as usize;
+                let new_index = (app_time * SAMPLE_RATE as Float) as usize;
                 SAMPLE_INDEX.store(new_index, std::sync::atomic::Ordering::Relaxed);
             }
         }
@@ -109,7 +109,7 @@ impl SoundControl {
         self.queue.push(new_fn);
     }
 
-    fn update(&mut self, time: f64) {
+    fn update(&mut self, time: Float) {
         while !self.queue.is_empty() {
             self.next_fn = self.queue.pop().unwrap();
             self.sound_fn_changed = true;
@@ -123,13 +123,13 @@ impl SoundControl {
         }
     }
 
-    pub fn set_time(&mut self, new_elapsed_time: f64) {
+    pub fn set_time(&mut self, new_elapsed_time: Float) {
         let current_time = self.start_time + self.elapsed_time;
         self.elapsed_time = new_elapsed_time;
         self.start_time = current_time - self.elapsed_time;
     }
 
-    pub fn time(&self) -> f64 {
+    pub fn time(&self) -> Float {
         self.elapsed_time
     }
 

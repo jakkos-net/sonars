@@ -86,13 +86,13 @@ pub fn cached_bjorklund(steps: usize, pulses: usize, index: usize) -> bool {
 #[macro_export]
 macro_rules! euc {
     ($steps: expr, $pulses: expr) => {
-        |t: f32| {
+        |t: Float| {
             use $crate::math::bjorklund::cached_bjorklund;
             let steps: usize = $steps;
             let pulses: usize = $pulses;
-            let index = (steps as f32 * (t % 1.0)) as usize;
+            let index = (steps as Float * (t % 1.0)) as usize;
             if cached_bjorklund(steps, pulses, index) {
-                (t * steps as f32) % 1.0
+                (t * steps as Float) % 1.0
             } else {
                 0.0
             }

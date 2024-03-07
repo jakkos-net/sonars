@@ -1,4 +1,5 @@
 pub mod editor;
+mod fft;
 pub mod lang;
 pub mod math;
 mod sound;

@@ -24,7 +24,7 @@ use once_cell::sync::Lazy;
 use std::sync::Mutex;
 use std::sync::{atomic::AtomicUsize, Arc};
 
-const SAMPLE_RATE: u32 = 48_000;
+pub const SAMPLE_RATE: u32 = 48_000;
 const INV_SAMPLE_RATE: Float = 1.0 / (SAMPLE_RATE as Float);
 const TIME_DIFFERENCE_THRESHOLD: Float = 200.0 / 1000.0;
 static SAMPLE_INDEX: AtomicUsize = AtomicUsize::new(0);

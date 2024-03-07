@@ -1,5 +1,5 @@
 [package]
-name = "sonars"
+name = "bevy_funk"
 version = "0.1.0"
 edition = "2021"
 

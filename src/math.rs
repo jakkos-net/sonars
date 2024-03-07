@@ -12,6 +12,10 @@ pub fn sat(f: f32) -> f32 {
     f.clamp(0.0, 1.0)
 }
 
+pub fn clip(f: f32) -> f32 {
+    f.clamp(-1.0, 1.0)
+}
+
 pub fn abs(f: f32) -> f32 {
     f.abs()
 }

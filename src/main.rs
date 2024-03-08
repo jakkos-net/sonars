@@ -9,10 +9,10 @@ use bevy::prelude::*;
 use math::*;
 
 use bevy_egui::{
-    egui::{self},
+    egui::{self, CollapsingHeader, DragValue},
     EguiContexts, EguiPlugin,
 };
-use visuals::VisualsPlugin;
+use visuals::{VisualsControls, VisualsPlugin};
 
 fn main() {
     App::new()
@@ -24,10 +24,78 @@ fn main() {
         .add_systems(Update, ui)
         .run();
 }
-fn ui(mut egui_context: EguiContexts, time: Res<Time>) {
-    egui::Window::new("Editor").show(egui_context.ctx_mut(), |ui| {
-        ui.label("hello world!");
-        ui.label(format!("time: {:.2}", time.elapsed().as_secs_f32()));
+fn ui(
+    mut egui_context: EguiContexts,
+    time: Res<Time>,
+    mut visual_controls: ResMut<VisualsControls>,
+) {
+    egui::SidePanel::left("controls panel").show(egui_context.ctx_mut(), |ui| {
+        CollapsingHeader::new("Sound")
+            .default_open(true)
+            .show(ui, |ui| {
+                ui.label(format!("Time: {:.2}", time.elapsed().as_secs_f32()));
+                ui.horizontal(|ui| {
+                    if ui.button("Play").clicked() {
+                        todo!()
+                    }
+                    if ui.button("Pause").clicked() {
+                        todo!()
+                    }
+                });
+                if ui.button("Restart audio server").clicked() {
+                    todo!()
+                }
+            });
+
+        ui.collapsing("Wave", |ui| {
+            ui.horizontal(|ui| {
+                ui.label("No. samples:");
+                ui.add(DragValue::new(&mut visual_controls.wave_samples));
+            });
+            ui.horizontal(|ui| {
+                ui.label("Height:");
+                ui.add(DragValue::new(&mut visual_controls.wave_height_scale));
+            });
+            ui.horizontal(|ui| {
+                ui.label("Line width:");
+                ui.add(DragValue::new(&mut visual_controls.wave_line_width));
+            });
+            ui.horizontal(|ui| {
+                ui.label("Time rounding:");
+                ui.add(DragValue::new(&mut visual_controls.wave_time_rounding));
+            });
+            ui.horizontal(|ui| {
+                ui.label("Time scale:");
+                ui.add(DragValue::new(&mut visual_controls.wave_inv_time_scale));
+                if ui.button("-").clicked() {
+                    visual_controls.wave_inv_time_scale -= 1.0;
+                }
+                if ui.button("+").clicked() {
+                    visual_controls.wave_inv_time_scale += 1.0;
+                }
+                if ui.button("-10").clicked() {
+                    visual_controls.wave_inv_time_scale -= 10.0;
+                }
+                if ui.button("+10").clicked() {
+                    visual_controls.wave_inv_time_scale += 10.0;
+                }
+            });
+            ui.horizontal(|ui| {
+                ui.label("No. ghosts");
+                ui.add(DragValue::new(&mut visual_controls.wave_history_len));
+            });
+            ui.horizontal(|ui| {
+                ui.label("Ghost fadeoff:");
+                ui.add(DragValue::new(&mut visual_controls.wave_fade_off));
+            });
+        });
+
+        ui.collapsing("FFT", |ui| {
+            ui.horizontal(|ui| {
+                ui.label("Line width:");
+                ui.add(DragValue::new(&mut visual_controls.fft_line_width));
+            });
+        })
     });
 }
 
@@ -41,14 +109,17 @@ fn setup(mut sound: ResMut<sound::SoundControl>) {
         // let e = env![0.0, 1.0, 0.0];
         // let pat = seq![|t| 1.0 - id(t), id, id](t);
         // let out = e(pat) * d;
-        let m = sin(200.0 * t) * 50.0;
+        // let m = sin(200.0 * t);
         // let m = 0.0;
-        let out = sin((800.0 + m) * t);
+        // let out = sin((800.0 + m) * t);
+
         // let out = sin(440.0 * t);
-        //out
+
+        let out = sin(880.0 * t) + sin(440. * t) + sin(220. * t);
+        let out = out / 3.0;
 
         let vol = 0.1;
-        let out = clip(vol * out);
+        let out = clip(out) * vol;
         [out, out]
     }));
 }

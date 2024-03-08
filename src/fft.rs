@@ -1,34 +1,42 @@
-use std::sync::{Arc, Mutex};
-
-use once_cell::sync::Lazy;
-use realfft::{num_complex::Complex, RealFftPlanner, RealToComplex};
+use itertools::Itertools;
+use spectrum_analyzer::{
+    samples_fft_to_spectrum, scaling::divide_by_N_sqrt, windows::hann_window, FrequencyLimit,
+};
 
 use crate::sound::{FloatOut, SAMPLE_RATE};
 
-const FFT_BUFFER_TIME: f32 = 0.1;
-const FFT_BUFFER_SIZE: usize = (SAMPLE_RATE as f32 * FFT_BUFFER_TIME) as usize;
-static FFT_RESOURCES: Lazy<Mutex<FftResources>> = Lazy::new(|| Default::default());
+// needs to be power of 2
+pub const FFT_BUFFER_SIZE: usize = 16384;
 
-struct FftResources {
-    fft: Arc<dyn RealToComplex<FloatOut>>,
-    scratch: [Complex<FloatOut>; FFT_BUFFER_SIZE],
-    output: [Complex<FloatOut>; FFT_BUFFER_SIZE],
+pub fn fft(buffer: &[FloatOut]) -> anyhow::Result<impl Iterator<Item = FreqMag>> {
+    let hann_window = hann_window(buffer);
+    // calc spectrum
+    let spectrum_hann_window = samples_fft_to_spectrum(
+        // (windowed) samples
+        &hann_window,
+        // sampling rate
+        SAMPLE_RATE,
+        // optional frequency limit: e.g. only interested in frequencies 50 <= f <= 150?
+        FrequencyLimit::All,
+        // optional scale
+        Some(&divide_by_N_sqrt),
+    )
+    .unwrap();
+
+    let output = spectrum_hann_window
+        .data()
+        .into_iter()
+        .cloned()
+        .collect_vec();
+
+    Ok(output.into_iter().map(|(f, m)| FreqMag {
+        freq: f.val(),
+        mag: m.val(),
+    }))
 }
 
-impl Default for FftResources {
-    fn default() -> Self {
-        FftResources {
-            fft: RealFftPlanner::new().plan_fft_forward(FFT_BUFFER_SIZE),
-            scratch: [Complex::new(0.0, 0.0); FFT_BUFFER_SIZE],
-            output: [Complex::new(0.0, 0.0); FFT_BUFFER_SIZE],
-        }
-    }
-}
-
-pub fn fft(buffer: &mut [FloatOut]) {
-    let mut fft_resources = FFT_RESOURCES.lock().unwrap();
-    // let fft = &fft_resources.fft;
-    // let output = &mut fft_resources.output;
-    // let scratch = &mut fft_resources.scratch;
-    // fft.process_with_scratch(buffer, output, scratch).unwrap();
+#[derive(Clone, Debug)]
+pub struct FreqMag {
+    pub freq: f32,
+    pub mag: f32,
 }

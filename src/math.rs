@@ -26,8 +26,8 @@ macro_rules! avg {
         |t| {
             use $crate::math::Callable;
             let v: Vec<Box<dyn Callable>> = vec![$(Box::new($e)),*];
-            let sum: TimeInType = v.iter().map(|f| f.call(t)).sum();
-            sum/(v.len() as TimeInType)
+            let sum: Float = v.iter().map(|f| f.call(t)).sum();
+            sum/(v.len() as Float)
         }
     };
 }
@@ -74,8 +74,9 @@ macro_rules! seq {
     ($($e:expr),*) => {
         |t| {
             use $crate::math::Callable;
+            use $crate::sound::Float;
             let v: &[Box<dyn Callable>] = &[$(Box::new($e)),*];
-            let t = t % (v.len() as TimeInType);
+            let t = t % (v.len() as Float);
             let step = t as usize;
             let frac = t % 1.0;
             (v[step]).call(frac)
@@ -87,8 +88,9 @@ macro_rules! seq {
 macro_rules! env {
     ($($e:expr),*) => {{
         |t| {
+            use $crate::sound::Float;
             let v = [$($e),*];
-            let scaled_t:TimeInType = (t % 1.0) * (v.len()-1) as TimeInType;
+            let scaled_t:Float = (t % 1.0) * (v.len()-1) as Float;
             let step = scaled_t as usize;
             let frac = scaled_t % 1.0;
             v[step] * (1.0-frac) + v[step+1] * frac
@@ -99,12 +101,13 @@ macro_rules! env {
 #[macro_export]
 macro_rules! detune {
     ($n:expr, $k:expr, $f: expr) => {{
+        use $crate::sound::Float;
         let f = $f;
         let n = $n;
-        let k = $k as TimeInType;
+        let k = $k as Float;
         let mut up = 0.0;
         let mut down = 0.0;
-        move |t: TimeInType| {
+        move |t: Float| {
             let mut acc = f(1.0, t);
             for _ in 0..n {
                 up += k;
@@ -113,7 +116,7 @@ macro_rules! detune {
                 acc += f(down, t);
             }
 
-            acc / ((n * 2 + 1) as TimeInType)
+            acc / ((n * 2 + 1) as Float)
         }
     }};
 }

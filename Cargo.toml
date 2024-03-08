@@ -13,7 +13,7 @@ itertools = "0.10.5"
 once_cell = "1.17.1"
 thiserror = "1.0.39"
 dyn-clone = "1.0.16"
-realfft = "3.3.0"
+spectrum-analyzer = "1.5.0"
 
 [target.'cfg(not(target_arch = "wasm32"))'.dependencies]
 web-audio-api = { version = "0.28.0", default-features = false, features = [

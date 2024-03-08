@@ -1,7 +1,7 @@
 use std::collections::VecDeque;
 
 use bevy::{
-    app::{FixedUpdate, PostUpdate, Update},
+    app::{FixedUpdate, PostUpdate},
     prelude::{Plugin, Res, ResMut, Resource},
     time::Time,
 };
@@ -77,7 +77,6 @@ fn update_data(
     let time = time.elapsed_seconds_f64();
     let height = controls.wave_height_scale;
     let n = controls.wave_samples;
-    let time_scale = controls.wave_inv_time_scale;
     let sound_fn = sound_control.current_soundfn();
     let wave_time_scale = 1.0 / controls.wave_inv_time_scale;
     data.wave_history.push_front(

@@ -123,7 +123,7 @@ impl SoundControl {
         }
     }
 
-    pub fn set_time(&mut self, new_elapsed_time: Float) {
+    pub fn _set_time(&mut self, new_elapsed_time: Float) {
         let current_time = self.start_time + self.elapsed_time;
         self.elapsed_time = new_elapsed_time;
         self.start_time = current_time - self.elapsed_time;

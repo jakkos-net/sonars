@@ -6,7 +6,7 @@ use bevy::{
     time::Time,
 };
 use bevy_egui::{
-    egui::{self, emath, epaint, Color32, Pos2, Rect, Stroke},
+    egui::{self, emath, epaint, pos2, Color32, Pos2, Rect, Stroke},
     EguiContexts,
 };
 
@@ -75,6 +75,7 @@ fn update_data(
     sound_control: Res<SoundControl>,
 ) {
     let time = time.elapsed_seconds_f64();
+    let rounded_time = (time * controls.wave_time_rounding).round() / controls.wave_time_rounding;
     let height = controls.wave_height_scale;
     let n = controls.wave_samples;
     let sound_fn = sound_control.current_soundfn();
@@ -82,7 +83,7 @@ fn update_data(
     data.wave_history.push_front(
         (0..=n)
             .map(|i| {
-                let t = (i as f64 / (n as f64)) * wave_time_scale + time;
+                let t = (i as f64 / (n as f64)) * wave_time_scale + rounded_time;
                 let y = sound_fn(t)[0] * height as Float;
                 y as FloatOut
             })
@@ -110,11 +111,13 @@ fn draw_visuals(
 ) {
     egui::CentralPanel::default().show(egui_context.ctx_mut(), |ui| {
         ui.ctx().request_repaint();
-        let n = controls.wave_samples;
         let to_screen = emath::RectTransform::from_to(
             Rect::from_x_y_ranges(0.0..=1.0, -1.0..=1.0),
             ui.ctx().available_rect(),
         );
+
+        // Wave lines
+        let n = controls.wave_samples;
         data.wave_history.iter().enumerate().for_each(|(i, ys)| {
             let l_norm = (((controls.wave_history_len - i) as FloatOut)
                 / (controls.wave_history_len as FloatOut))
@@ -127,7 +130,7 @@ fn draw_visuals(
                 .enumerate()
                 .map(|(i, y)| {
                     let t = i as FloatOut / (n as FloatOut);
-                    to_screen * bevy_egui::egui::pos2(t, *y)
+                    to_screen * bevy_egui::egui::pos2(t, -*y)
                 })
                 .collect();
 
@@ -136,7 +139,14 @@ fn draw_visuals(
                 Stroke::new(controls.wave_line_width, color),
             ));
         });
+        // Wave y=0 line
+        let points = vec![pos2(0.0, 0.0), pos2(1.0, 0.0)];
+        ui.painter().add(epaint::Shape::line(
+            points,
+            Stroke::new(1.0, Color32::GREEN),
+        ));
 
+        // FFT lines
         let max_mag: f32 = data
             .fft_data
             .iter()

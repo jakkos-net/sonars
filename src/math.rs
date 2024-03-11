@@ -6,6 +6,7 @@ const TAU: Float = std::f64::consts::TAU as Float;
 
 pub fn cache_maths() {
     euc!(1, 1)(1.0);
+    sin(0.1);
 }
 
 pub fn sat(f: Float) -> Float {
@@ -35,6 +36,19 @@ macro_rules! avg {
 pub fn sin(f: Float) -> Float {
     (f * TAU).sin()
 }
+// pub fn sin(f: Float) -> Float {
+//     let idx = ((f % 1.0) * (SAMPLE_RATE as Float)) as usize;
+//     SIN_CACHE[idx]
+// }
+
+// static SIN_CACHE: Lazy<[Float; SAMPLE_RATE as usize]> = Lazy::new(|| {
+//     let mut buffer = [0.0; SAMPLE_RATE as usize];
+//     for idx in 0..SAMPLE_RATE as usize {
+//         let t = (idx as Float) / (SAMPLE_RATE as Float);
+//         buffer[idx] = (t * TAU).sin();
+//     }
+//     buffer
+// });
 
 pub fn cos(f: Float) -> Float {
     (f * TAU).cos()
@@ -45,7 +59,7 @@ pub fn tan(f: Float) -> Float {
 }
 
 pub fn saw(f: Float) -> Float {
-    (f % 1.0) * 2.0 - 1.0
+    ((f % 1.0) - 0.5) * 2.0
 }
 
 pub fn tri(f: Float) -> Float {
@@ -53,7 +67,7 @@ pub fn tri(f: Float) -> Float {
 }
 
 pub fn sqr(f: Float) -> Float {
-    ((f % 2.0) as usize) as Float - 1.0
+    (((f % 2.0) as usize) as Float - 0.5) * 2.0
 }
 
 pub fn id(f: Float) -> Float {

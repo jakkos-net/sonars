@@ -6,13 +6,9 @@ use web_audio_api::{
     render::{AudioParamValues, AudioProcessor, AudioRenderQuantum, RenderScope},
 };
 
-use std::sync::Arc;
-
 use crate::sound::SAMPLE_RATE;
 
-use super::{
-    empty_sound_fn, Float, FloatOut, SoundFn, CURRENT_SOUND_FN, INV_SAMPLE_RATE, SAMPLE_INDEX,
-};
+use super::{Float, FloatOut, CURRENT_SOUND_FN, INV_SAMPLE_RATE, SAMPLE_INDEX};
 
 pub fn setup_worklet(context: &AudioContext) {
     let noise = MyNode::new(context);

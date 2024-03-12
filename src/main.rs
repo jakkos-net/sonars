@@ -121,13 +121,18 @@ fn setup(mut sound: ResMut<sound::SoundControl>) {
 
         // let out = sqr(440.0 * t);
         // let out = sin(440.0 * t);
-        let out = sin(880.0 * t) + sin(440. * t) + sin(220. * t);
-        let out = out / 3.0;
+        // let out = sin(880.0 * t) + sin(440. * t) + sin(220. * t);
+        // let out = out / 3.0;
 
-        // let m = sin(200.0 * t) * 400.0;
-        // let out = sin((800.0 + m) * t);
+        // let m = sin(1. * t) * 100.0;
+        // let out = sin((400.0 + m) * t);
+        let m = tri(440.0 * t);
+        // let freq = 400.0 + (m);
+        // let out = sin(freq * t);
+        let out = m;
+
         let vol = 0.1;
-        let out = clip(out * vol);
+        let out = clip(out) * vol;
         [out, out]
     }));
 }

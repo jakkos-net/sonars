@@ -112,7 +112,8 @@ pub struct SoundResources {
 impl Default for SoundResources {
     fn default() -> Self {
         let ctx = AudioContext::new(AudioContextOptions {
-            latency_hint: web_audio_api::context::AudioContextLatencyCategory::Interactive,
+            latency_hint: web_audio_api::context::AudioContextLatencyCategory::Playback,
+            // latency_hint: web_audio_api::context::AudioContextLatencyCategory::Interactive,
             sample_rate: Some(SAMPLE_RATE as f32),
             sink_id: "".into(),
             render_size_hint: web_audio_api::context::AudioContextRenderSizeCategory::Default,

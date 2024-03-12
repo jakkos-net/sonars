@@ -24,16 +24,16 @@ use once_cell::sync::Lazy;
 use std::sync::Mutex;
 use std::sync::{atomic::AtomicUsize, Arc};
 
-pub const SAMPLE_RATE: u32 = 44_100;
+pub const SAMPLE_RATE: u32 = 48_000;
 pub const INV_SAMPLE_RATE: Float = 1.0 / (SAMPLE_RATE as Float);
-const TIME_DIFFERENCE_THRESHOLD: Float = 200.0 / 1000.0;
+const TIME_DIFFERENCE_THRESHOLD: Float = 1e6;
 static SAMPLE_INDEX: AtomicUsize = AtomicUsize::new(0);
 
 pub struct SoundPlugin;
 
 pub type SoundFn = Box<dyn SoundFnTrait>;
 pub trait SoundFnTrait: Fn(Float) -> [Float; 2] + Send + Sync + DynClone {}
-impl<T> SoundFnTrait for T where T: Fn(f64) -> [Float; 2] + Clone + Send + Sync {}
+impl<T> SoundFnTrait for T where T: Fn(Float) -> [Float; 2] + Clone + Send + Sync {}
 
 // We may want to use different types for computing and outputting sounds
 // e.g. we may want f64 for precision when calculating things, but wasm only accepts f32 as output
@@ -59,7 +59,7 @@ fn update(mut commands: Commands, mut sound_control: ResMut<SoundControl>, time:
             sound_control.state = State::Running
         }
         State::Running => {
-            sound_control.update(time.elapsed_seconds_f64());
+            sound_control.update(time.elapsed_seconds_f64() as Float);
 
             let sample_index = SAMPLE_INDEX.load(std::sync::atomic::Ordering::Relaxed);
             let audio_time = sample_index as Float * INV_SAMPLE_RATE;
@@ -79,8 +79,8 @@ pub struct SoundControl {
     queue: SegQueue<SoundFn>,
     next_fn: SoundFn,
     sound_fn_changed: bool,
-    start_time: f64,
-    elapsed_time: f64,
+    start_time: Float,
+    elapsed_time: Float,
     state: State,
 }
 

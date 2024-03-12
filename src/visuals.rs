@@ -35,11 +35,11 @@ struct VisualData {
 #[derive(Resource)]
 pub struct VisualsControls {
     pub wave_inv_time_scale: Float,
-    pub wave_fade_off: f32,
-    pub wave_height_scale: f32,
+    pub wave_fade_off: Float,
+    pub wave_height_scale: Float,
     pub wave_line_width: f32,
     pub fft_line_width: f32,
-    pub wave_time_rounding: f64,
+    pub wave_time_rounding: Float,
     pub wave_history_len: usize,
     pub wave_samples: usize,
 }
@@ -74,7 +74,7 @@ fn update_data(
     controls: Res<VisualsControls>,
     sound_control: Res<SoundControl>,
 ) {
-    let time = time.elapsed_seconds_f64();
+    let time = time.elapsed_seconds_f64() as Float;
     let rounded_time = (time * controls.wave_time_rounding).round() / controls.wave_time_rounding;
     let height = controls.wave_height_scale;
     let n = controls.wave_samples;
@@ -83,7 +83,7 @@ fn update_data(
     data.wave_history.push_front(
         (0..=n)
             .map(|i| {
-                let t = (i as f64 / (n as f64)) * wave_time_scale + rounded_time;
+                let t = (i as Float / (n as Float)) * wave_time_scale + rounded_time;
                 let y = sound_fn(t)[0] * height as Float;
                 y as FloatOut
             })
@@ -94,7 +94,7 @@ fn update_data(
     let mut fft_buffer: Vec<_> = (0..FFT_BUFFER_SIZE)
         .into_iter()
         .map(|buffer_idx| {
-            let t = time + (buffer_idx as f64 * INV_SAMPLE_RATE);
+            let t = rounded_time + (buffer_idx as Float * INV_SAMPLE_RATE);
             sound_fn(t)[0] as FloatOut
         })
         .collect();

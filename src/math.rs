@@ -33,6 +33,9 @@ macro_rules! avg {
     };
 }
 
+// pub fn sin(f: Float) -> Float {
+// fastapprox::faster::sinfull(f as f32) as f64
+// }
 pub fn sin(f: Float) -> Float {
     (f * TAU).sin()
 }

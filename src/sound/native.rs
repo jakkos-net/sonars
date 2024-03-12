@@ -10,7 +10,9 @@ use std::sync::Arc;
 
 use crate::sound::SAMPLE_RATE;
 
-use super::{empty_sound_fn, FloatOut, SoundFn, CURRENT_SOUND_FN, INV_SAMPLE_RATE, SAMPLE_INDEX};
+use super::{
+    empty_sound_fn, Float, FloatOut, SoundFn, CURRENT_SOUND_FN, INV_SAMPLE_RATE, SAMPLE_INDEX,
+};
 
 pub fn setup_worklet(context: &AudioContext) {
     let noise = MyNode::new(context);
@@ -56,15 +58,11 @@ impl MyNode {
     }
 }
 
-struct MyProcessor {
-    _sound_fn: Arc<SoundFn>,
-}
+struct MyProcessor {}
 
 impl Default for MyProcessor {
     fn default() -> Self {
-        Self {
-            _sound_fn: Arc::new(empty_sound_fn()),
-        }
+        Self {}
     }
 }
 
@@ -76,6 +74,7 @@ impl AudioProcessor for MyProcessor {
         _params: AudioParamValues,
         _scope: &RenderScope,
     ) -> bool {
+        // let t = std::time::Instant::now();
         let sample_idx = SAMPLE_INDEX.load(std::sync::atomic::Ordering::Relaxed);
         let output = &mut outputs[0];
         output.set_number_of_channels(2);
@@ -87,12 +86,11 @@ impl AudioProcessor for MyProcessor {
         let (left, right) = channels.split_at_mut(1);
         let channel_0 = &mut left[0];
         let channel_1 = &mut right[0];
-
         izip!(channel_0.iter_mut(), channel_1.iter_mut())
             .enumerate()
             .for_each(|(i, (f0, f1))| {
                 let idx = sample_idx + i;
-                let t = idx as f64 * INV_SAMPLE_RATE;
+                let t = idx as Float * INV_SAMPLE_RATE;
                 let [f0_n, f1_n] = sound_fn(t);
                 *f0 = f0_n as FloatOut;
                 *f1 = f1_n as FloatOut;
@@ -102,6 +100,8 @@ impl AudioProcessor for MyProcessor {
             sample_idx + channel_0.len(),
             std::sync::atomic::Ordering::Relaxed,
         );
+
+        // println!("{}", t.elapsed().as_micros());
 
         true
     }
@@ -116,7 +116,7 @@ pub struct SoundResources {
 impl Default for SoundResources {
     fn default() -> Self {
         let ctx = AudioContext::new(AudioContextOptions {
-            latency_hint: web_audio_api::context::AudioContextLatencyCategory::Balanced,
+            latency_hint: web_audio_api::context::AudioContextLatencyCategory::Interactive,
             sample_rate: Some(SAMPLE_RATE as f32),
             sink_id: "".into(),
             render_size_hint: web_audio_api::context::AudioContextRenderSizeCategory::Default,

@@ -112,24 +112,22 @@ fn setup(mut sound: ResMut<sound::SoundControl>) {
         // let pat = seq![|t| 1.0 - id(t), id, id](t);
         // let out = e(pat) * d;
 
-        let m = sin(1.0 * t) * 400.0;
-        // let out = m;
-        // let out = sqr((800.0 + m) * t);
+        // let out = sin(1600.0 * t);
+        // let out = sin((400.0 + m) * t);
 
-        // let m = sin(200.0 * t) * 400.0;
-        let out = sin((800.0 + m) * t);
+        // let out = sin(1600.0 * t);
 
         // let out = saw(440.0 * t);
 
         // let out = sqr(440.0 * t);
         // let out = sin(440.0 * t);
+        let out = sin(880.0 * t) + sin(440. * t) + sin(220. * t);
+        let out = out / 3.0;
 
-        // let out = sin(880.0 * t) + sin(440. * t) + sin(220. * t);
-        // let out = out / 3.0;
-
+        // let m = sin(200.0 * t) * 400.0;
+        // let out = sin((800.0 + m) * t);
         let vol = 0.1;
-        let out = vol * out;
-        // let out = clip(out) * vol;
+        let out = clip(out * vol);
         [out, out]
     }));
 }
